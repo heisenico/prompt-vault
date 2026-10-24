@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Biblioteca pessoal de prompts, salva só no seu navegador.">
+    <title>Prompt Vault — sua biblioteca de prompts</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <header class="nav-bar">
+      <div class="nav-bar-content page-width">
+        <a class="brand" href="./">
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/>
+              <path d="M8.5 8.5 11 10l-2.5 1.5M12.5 12h3"/>
+            </svg>
+          </span>
+          Prompt Vault
+        </a>
+        <p class="nav-note">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="10" rx="2.5"/>
+            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          <span class="nav-note-text">Salvo só neste navegador</span>
+        </p>
+      </div>
+    </header>
+
+    <p id="announcer" class="visually-hidden" role="status" aria-live="polite"></p>
+
+    <main class="page-width">
+      <section class="intro" aria-labelledby="page-title">
+        <h1 id="page-title">Ideias boas merecem <span>um lugar só delas.</span></h1>
+        <p class="intro-copy">Prompts pessoais e de trabalho num só lugar. Avalie, anote e copie quando precisar.</p>
+      </section>
+
+      <div class="workspace">
+        <section class="editor-panel" aria-labelledby="form-title">
+          <h2 id="form-title" class="section-title">Novo prompt</h2>
+
+          <form id="prompt-form" novalidate>
+            <div class="grouped-list">
+              <div class="field-row">
+                <label for="prompt-title">Título</label>
+                <input id="prompt-title" name="title" type="text" placeholder="Ex.: Revisar pull request" maxlength="100" required>
+              </div>
+
+              <div class="field-row">
+                <label for="prompt-model">Modelo</label>
+                <input id="prompt-model" name="model" type="text" placeholder="Ex.: Claude Sonnet" maxlength="100" required>
+              </div>
+
+              <fieldset class="field-row">
+                <legend>Caderno</legend>
+                <div class="segmented">
+                  <label class="segment">
+                    <input type="radio" name="notebook" value="pessoal" checked>
+                    <span>Pessoal</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="notebook" value="trabalho">
+                    <span>Trabalho</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="field-row">
+                <label for="prompt-content">Prompt</label>
+                <textarea id="prompt-content" name="content" rows="8" placeholder="Escreva ou cole o prompt aqui…" required></textarea>
+              </div>
+
+              <div id="prompt-checkup" class="field-row prompt-checkup" hidden>
+                <div class="checkup-heading">
+                  <span class="checkup-label">Checkup</span>
+                  <span class="checkup-tokens"></span>
+                </div>
+                <ul class="checkup-list" role="list" aria-label="Partes do prompt"></ul>
+                <p class="checkup-tip"></p>
+              </div>
+
+              <label class="field-row switch-row" for="prompt-is-code">
+                <span>Contém código</span>
+                <input id="prompt-is-code" name="isCode" type="checkbox" role="switch">
+              </label>
+            </div>
+            <p class="group-footer">Código costuma gerar mais tokens, e a estimativa leva isso em conta.</p>
+
+            <button class="primary-button" type="submit">Salvar prompt</button>
+          </form>
+        </section>
+
+        <section class="library-panel" aria-labelledby="library-title">
+          <div class="library-header">
+            <h2 id="library-title" class="section-title" tabindex="-1">
+              Biblioteca <span id="prompt-count" class="count-badge">0</span>
+            </h2>
+            <nav class="notebook-filter" aria-label="Filtrar por caderno">
+              <ul class="segmented" role="list">
+                <li><button class="segment" type="button" data-notebook="all" aria-pressed="true">Todos <span class="segment-count" data-count-for="all">0</span></button></li>
+                <li><button class="segment" type="button" data-notebook="pessoal" aria-pressed="false">Pessoal <span class="segment-count" data-count-for="pessoal">0</span></button></li>
+                <li><button class="segment" type="button" data-notebook="trabalho" aria-pressed="false">Trabalho <span class="segment-count" data-count-for="trabalho">0</span></button></li>
+              </ul>
+            </nav>
+          </div>
+          <p id="status-message" class="status-message" role="alert"></p>
+          <div id="prompt-list"></div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer page-width">
+      <span>Feito para quem pensa em prompts.</span>
+      <span>Nada sai do seu navegador.</span>
+    </footer>
+
+    <dialog id="prompt-viewer" class="prompt-viewer" aria-labelledby="viewer-title">
+      <article class="viewer-panel">
+        <header class="viewer-header">
+          <div class="viewer-swap">
+            <p class="viewer-eyebrow">
+              <span class="notebook-badge" data-field="notebook"></span>
+              <span data-field="model"></span>
+            </p>
+            <h2 id="viewer-title" class="viewer-title" data-field="title"></h2>
+          </div>
+          <button class="glass-button" type="button" data-viewer-action="close" aria-label="Fechar" autofocus>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </header>
+
+        <div class="viewer-body" data-field="body" tabindex="0" role="region" aria-label="Texto completo do prompt">
+          <p class="viewer-content viewer-swap" data-field="content"></p>
+        </div>
+
+        <footer class="viewer-footer">
+          <dl class="viewer-meta">
+            <div><dt>Tokens</dt><dd data-field="tokens"></dd></div>
+            <div><dt>Caracteres</dt><dd data-field="characters"></dd></div>
+            <div><dt>Criado em</dt><dd><time data-field="created"></time></dd></div>
+          </dl>
+
+          <div class="viewer-actions">
+            <div class="viewer-stepper" data-field="stepper">
+              <button class="glass-button" type="button" data-viewer-action="previous" aria-label="Prompt anterior" aria-keyshortcuts="ArrowLeft">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+              </button>
+              <span class="viewer-position" data-field="position"></span>
+              <button class="glass-button" type="button" data-viewer-action="next" aria-label="Próximo prompt" aria-keyshortcuts="ArrowRight">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+
+            <button class="copy-pill" type="button" data-viewer-action="copy" data-state="idle">
+              <svg class="icon icon-idle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 8h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z"/><path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"/></svg>
+              <svg class="icon icon-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <span data-field="copy-label">Copiar prompt</span>
+            </button>
+          </div>
+        </footer>
+
+        <!-- The page behind a modal dialog is inert, so the dialog needs its own live region. -->
+        <p class="visually-hidden" role="status" aria-live="polite" data-field="status"></p>
+      </article>
+    </dialog>
+  </body>
+</html>

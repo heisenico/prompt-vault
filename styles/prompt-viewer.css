@@ -1,0 +1,460 @@
+/*
+ * Full-view prompt panel: a native modal <dialog> styled as liquid glass.
+ *
+ * The <dialog> itself is a transparent, full-viewport hit area. A click that
+ * lands on it (rather than on .viewer-panel) is a click outside the panel.
+ */
+
+html:has(.prompt-viewer[open]) {
+  overflow: hidden;
+}
+
+.prompt-viewer {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: var(--gutter);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.prompt-viewer[open] {
+  display: grid;
+  place-items: center;
+}
+
+/* Literal colors: older engines don't inherit custom properties into ::backdrop. */
+.prompt-viewer::backdrop {
+  background:
+    radial-gradient(60% 50% at 18% 22%, rgb(0 122 255 / 30%), transparent 70%),
+    radial-gradient(55% 45% at 82% 78%, rgb(175 82 222 / 26%), transparent 70%),
+    rgb(12 14 24 / 32%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+/* ---------- Glass panel ---------- */
+
+.viewer-panel {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(100%, 46rem);
+  max-height: min(100dvh - 2 * var(--gutter), 52rem);
+  border-radius: var(--radius-sheet);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+/* Specular highlight: light pooling in the top-left, a faint tint glow opposite. */
+.viewer-panel::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(90% 55% at 10% -12%, var(--glass-highlight), transparent 62%),
+    radial-gradient(70% 45% at 100% 112%, var(--glass-glow), transparent 70%);
+  content: "";
+  pointer-events: none;
+}
+
+/* Refraction rim: a 1px gradient border, brighter where light would bend. */
+.viewer-panel::after {
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(140deg, var(--glass-rim), transparent 32%, transparent 68%, var(--glass-rim));
+  content: "";
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* Fallback: no backdrop-filter means a translucent fill would hurt legibility. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .viewer-panel {
+    background: var(--glass-fill-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .viewer-panel {
+    background: var(--glass-fill-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---------- Panel sections ---------- */
+
+.viewer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+}
+
+.viewer-header .viewer-swap {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.viewer-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--glass-text-secondary);
+  font-size: var(--text-footnote);
+  font-weight: 500;
+}
+
+.viewer-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.viewer-body {
+  margin-inline: var(--space-4);
+  padding: 1.25rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: calc(var(--radius-sheet) - var(--space-3));
+  background: var(--glass-inset);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 6%);
+}
+
+.viewer-body:focus-visible {
+  outline-offset: -3px;
+}
+
+.viewer-content {
+  max-width: 68ch;
+  font-size: var(--text-body);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.viewer-content.is-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-subhead);
+  letter-spacing: 0;
+}
+
+.viewer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.viewer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) 1.25rem;
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer-meta dt {
+  color: var(--glass-text-secondary);
+}
+
+.viewer-meta dd {
+  font-weight: 600;
+}
+
+.viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.viewer-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.viewer-position {
+  min-width: 3.5rem;
+  color: var(--glass-text-secondary);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* ---------- Glass controls ---------- */
+
+.glass-button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--glass-control);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px var(--glass-edge);
+  color: var(--color-text);
+  transition: background var(--duration-fast) var(--ease-out), scale var(--duration-base) var(--ease-spring);
+}
+
+.glass-button .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.glass-button:hover {
+  background: var(--glass-control-hover);
+  scale: 1.06;
+}
+
+.glass-button:active {
+  scale: 0.94;
+}
+
+.copy-pill {
+  position: relative;
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: 1.125rem 1.25rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 6px 16px -6px var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-subhead);
+  font-weight: 600;
+  transition: background var(--duration-fast) var(--ease-out), scale var(--duration-base) var(--ease-spring);
+}
+
+.copy-pill:hover {
+  background: var(--color-accent-hover);
+}
+
+.copy-pill:active {
+  scale: 0.96;
+}
+
+.copy-pill .icon {
+  width: 1.0625rem;
+  height: 1.0625rem;
+}
+
+.copy-pill .icon-done,
+.copy-pill[data-state="copied"] .icon-idle {
+  display: none;
+}
+
+.copy-pill[data-state="copied"] .icon-done {
+  display: block;
+}
+
+/* The check mark draws itself; pathLength="1" in the markup normalizes the dash. */
+.copy-pill[data-state="copied"] .icon-done path {
+  stroke-dasharray: 1;
+  animation: draw-check var(--duration-slow) var(--ease-out) both;
+}
+
+/* A ring ripples out from the pill to confirm the copy. */
+.copy-pill[data-state="copied"]::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 var(--color-accent);
+  content: "";
+  animation: ripple var(--duration-slow) var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+.copy-pill[data-state="error"] {
+  background: var(--color-danger);
+}
+
+/* ---------- Motion ---------- */
+
+.prompt-viewer[open] .viewer-panel {
+  animation: viewer-in var(--duration-slow) var(--ease-spring);
+}
+
+.prompt-viewer[open]::backdrop {
+  animation: viewer-fade-in var(--duration-base) var(--ease-out);
+}
+
+.prompt-viewer.is-closing .viewer-panel {
+  animation: viewer-out var(--duration-exit) var(--ease-in) forwards;
+}
+
+.prompt-viewer.is-closing::backdrop {
+  animation: viewer-fade-out var(--duration-exit) var(--ease-in) forwards;
+}
+
+.viewer-swap.is-swapping {
+  animation: swap-from-next var(--duration-base) var(--ease-out);
+}
+
+.viewer-panel[data-direction="previous"] .viewer-swap.is-swapping {
+  animation-name: swap-from-previous;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-viewer[open] .viewer-panel,
+  .prompt-viewer[open]::backdrop {
+    animation: viewer-fade-in var(--duration-fade) linear;
+  }
+
+  .prompt-viewer.is-closing .viewer-panel,
+  .prompt-viewer.is-closing::backdrop {
+    animation: viewer-fade-out var(--duration-fade) linear forwards;
+  }
+
+  .viewer-swap.is-swapping,
+  .copy-pill[data-state="copied"]::after {
+    animation: none;
+  }
+}
+
+@keyframes viewer-in {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+    scale: 0.96;
+  }
+}
+
+@keyframes viewer-out {
+  to {
+    opacity: 0;
+    translate: 0 0.75rem;
+    scale: 0.98;
+  }
+}
+
+@keyframes viewer-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes viewer-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes swap-from-next {
+  from {
+    opacity: 0;
+    translate: 1rem 0;
+  }
+}
+
+@keyframes swap-from-previous {
+  from {
+    opacity: 0;
+    translate: -1rem 0;
+  }
+}
+
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ripple {
+  to {
+    box-shadow: 0 0 0 0.75rem transparent;
+  }
+}
+
+/* ---------- Small screens: a bottom sheet ---------- */
+
+@media (max-width: 40rem) {
+  .prompt-viewer {
+    padding: var(--space-2) var(--space-2) max(var(--space-2), env(safe-area-inset-bottom));
+  }
+
+  .prompt-viewer[open] {
+    place-items: end center;
+  }
+
+  .viewer-panel {
+    width: 100%;
+    max-height: calc(100dvh - 2.5rem);
+  }
+
+  .viewer-header {
+    padding: 1.25rem 1.25rem var(--space-3);
+  }
+
+  .viewer-body {
+    margin-inline: var(--space-2);
+  }
+
+  .viewer-footer {
+    padding: var(--space-3) 1.25rem 1.25rem;
+  }
+
+  .viewer-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  @keyframes viewer-in {
+    from {
+      opacity: 0;
+      translate: 0 3rem;
+    }
+  }
+}
+
+/* ---------- Forced colors: system palette, no decorative layers ---------- */
+
+@media (forced-colors: active) {
+  .viewer-panel {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .viewer-panel::before,
+  .viewer-panel::after {
+    display: none;
+  }
+
+  .glass-button,
+  .copy-pill {
+    border: 1px solid ButtonText;
+  }
+}

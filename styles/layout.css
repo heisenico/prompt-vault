@@ -1,0 +1,70 @@
+.page-width {
+  width: min(var(--content-width), 100% - 2 * var(--gutter));
+  margin-inline: auto;
+}
+
+/* Navigation bar — translucent material with a hairline separator */
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: env(safe-area-inset-top);
+  border-bottom: 0.5px solid var(--color-separator);
+  background: var(--color-material);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.nav-bar-content {
+  display: flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.intro {
+  padding-block: clamp(1.75rem, 5vw, 2.75rem) clamp(1.5rem, 4vw, 2rem);
+}
+
+.workspace {
+  display: grid;
+  gap: 2.25rem;
+}
+
+.library-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-block-end: var(--space-4);
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+  margin-block-start: 3rem;
+  padding-block: 1.25rem calc(1.75rem + env(safe-area-inset-bottom));
+  border-top: 0.5px solid var(--color-separator);
+  color: var(--color-text-secondary);
+  font-size: var(--text-caption);
+}
+
+@media (min-width: 54rem) {
+  .workspace {
+    grid-template-columns: minmax(18.75rem, 0.82fr) minmax(0, 1.5fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+}
+
+/* Only pin the editor when the viewport is tall enough to show all of it. */
+@media (min-width: 54rem) and (min-height: 52rem) {
+  .editor-panel {
+    position: sticky;
+    top: 4.75rem;
+  }
+}

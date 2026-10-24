@@ -1,0 +1,12 @@
+/*
+ * Entry stylesheet. Layer order is the cascade order: later layers win,
+ * so components never need specificity tricks to override base styles.
+ */
+@layer tokens, base, layout, components, viewer, utilities;
+
+@import url("tokens.css") layer(tokens);
+@import url("base.css") layer(base);
+@import url("layout.css") layer(layout);
+@import url("components.css") layer(components);
+@import url("prompt-viewer.css") layer(viewer);
+@import url("utilities.css") layer(utilities);
