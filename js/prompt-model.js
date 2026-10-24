@@ -1,8 +1,6 @@
 // What a prompt is: how one is created, estimated, timestamped, and how
 // stored data is validated and upgraded from older versions of the app.
 
-import { isNotebook } from "./notebooks.js";
-
 const MAX_MODEL_LENGTH = 100;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const CONFIDENCE_LEVELS = new Set(["high", "medium", "low"]);
@@ -10,14 +8,13 @@ const LEGACY_MODEL = "Não informado";
 
 // ---------- Creating ----------
 
-export function createPrompt({ title, model, content, notebook, isCode }) {
+export function createPrompt({ title, model, content, isCode }) {
   assertModelName(model);
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
     title,
     content,
-    notebook,
     isCode,
     rating: null,
     notes: [],
@@ -94,7 +91,6 @@ function upgradeRecord(record) {
   return {
     rating: null,
     notes: [],
-    notebook: null,
     isCode: false,
     ...record,
     metadata: record.metadata ?? legacyMetadata(record.content),
@@ -113,13 +109,12 @@ function assertCoreFields(record) {
   check(typeof record.content === "string", "conteúdo ausente");
 }
 
-function assertValidPrompt({ rating, notes, notebook, isCode, metadata }) {
+function assertValidPrompt({ rating, notes, isCode, metadata }) {
   check(rating === null || (Number.isInteger(rating) && rating >= 1 && rating <= 5), "avaliação inválida");
   check(Array.isArray(notes), "notas não são uma lista");
   for (const note of notes) {
     check(typeof note?.id === "string" && typeof note.content === "string", "nota inválida");
   }
-  check(isNotebook(notebook), "caderno desconhecido");
   check(typeof isCode === "boolean", "isCode inválido");
   assertValidMetadata(metadata);
 }

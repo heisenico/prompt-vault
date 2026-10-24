@@ -6,7 +6,6 @@ import { initPromptViewer } from "./prompt-viewer.js";
 import { copyText } from "./clipboard.js";
 import { announce, clearError, showError, STORAGE_HINT } from "./feedback.js";
 import { formatList } from "./format.js";
-import { ALL_NOTEBOOKS, notebookLabel } from "./notebooks.js";
 
 const SAMPLE_PROMPTS_URL = new URL("../data/sample-prompts.json", import.meta.url);
 const COPY_RESET_DELAY = 1600;
@@ -16,11 +15,9 @@ const checkup = document.querySelector("#prompt-checkup");
 const promptList = document.querySelector("#prompt-list");
 const promptCount = document.querySelector("#prompt-count");
 const libraryTitle = document.querySelector("#library-title");
-const filterButtons = document.querySelectorAll(".notebook-filter [data-notebook]");
 
 /** UI state that isn't part of the stored library. */
 const view = {
-  notebook: ALL_NOTEBOOKS,
   editingNoteId: null,
   confirmingDeleteId: null,
   newPromptId: null,
@@ -34,20 +31,10 @@ const viewer = initPromptViewer(document.querySelector("#prompt-viewer"), {
 // ---------- Rendering ----------
 
 function renderApp() {
-  const visiblePrompts = store.listPrompts(view.notebook);
-  renderLibrary(promptList, visiblePrompts, view);
-  renderCounts();
+  const prompts = store.listPrompts();
+  renderLibrary(promptList, prompts, view);
+  promptCount.textContent = prompts.length;
   view.newPromptId = null;
-}
-
-function renderCounts() {
-  const counts = store.countByNotebook();
-  promptCount.textContent = counts.get(ALL_NOTEBOOKS);
-  for (const button of filterButtons) {
-    const { notebook } = button.dataset;
-    button.setAttribute("aria-pressed", String(notebook === view.notebook));
-    button.querySelector(".segment-count").textContent = counts.get(notebook) ?? 0;
-  }
 }
 
 function findInCard(promptId, selector) {
@@ -75,7 +62,6 @@ function readForm() {
     title: data.get("title").trim(),
     model: data.get("model").trim(),
     content: data.get("content").trim(),
-    notebook: data.get("notebook"),
     isCode: data.has("isCode"),
   };
 }
@@ -105,9 +91,8 @@ function savePrompt(event) {
   if (!saved) return;
 
   form.reset();
-  form.elements.notebook.value = fields.notebook; // keep the notebook for the next entry
   updateCheckup();
-  announce(`“${fields.title}” salvo em ${notebookLabel(fields.notebook)}`);
+  announce(`“${fields.title}” salvo na biblioteca`);
   form.elements.title.focus();
 }
 
@@ -119,7 +104,7 @@ function updateCheckup() {
 
 const cardActions = {
   open(promptId, control) {
-    const sequence = store.listPrompts(view.notebook).map(({ id }) => id);
+    const sequence = store.listPrompts().map(({ id }) => id);
     viewer.open(promptId, { trigger: control, sequence });
   },
 
@@ -152,7 +137,7 @@ const cardActions = {
   "confirm-delete"(promptId) {
     const { title } = store.getPrompt(promptId);
     view.confirmingDeleteId = null;
-    const ids = store.listPrompts(view.notebook).map(({ id }) => id);
+    const ids = store.listPrompts().map(({ id }) => id);
     const neighbourId = ids[ids.indexOf(promptId) + 1] ?? ids[ids.indexOf(promptId) - 1];
 
     if (!attempt(() => store.deletePrompt(promptId), "Não foi possível excluir o prompt.")) return;
@@ -297,20 +282,6 @@ function handleLibrarySubmit(event) {
   formActions[noteForm.dataset.action](promptId, noteForm);
 }
 
-// ---------- Notebook filter ----------
-
-function filterByNotebook(event) {
-  const button = event.target.closest("[data-notebook]");
-  if (!button) return;
-  view.notebook = button.dataset.notebook;
-  view.editingNoteId = null;
-  view.confirmingDeleteId = null;
-  renderApp();
-  const count = store.listPrompts(view.notebook).length;
-  const scope = view.notebook === ALL_NOTEBOOKS ? "em todos os cadernos" : `em ${notebookLabel(view.notebook)}`;
-  announce(`${count} ${count === 1 ? "prompt" : "prompts"} ${scope}`);
-}
-
 // ---------- Start ----------
 
 form.addEventListener("submit", savePrompt);
@@ -319,7 +290,6 @@ form.elements.isCode.addEventListener("change", updateCheckup);
 promptList.addEventListener("click", handleLibraryClick);
 promptList.addEventListener("submit", handleLibrarySubmit);
 promptList.addEventListener("keydown", handleLibraryKeydown);
-document.querySelector(".notebook-filter").addEventListener("click", filterByNotebook);
 store.subscribe(renderApp);
 
 try {

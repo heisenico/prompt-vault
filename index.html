@@ -38,7 +38,7 @@
     <main class="page-width">
       <section class="intro" aria-labelledby="page-title">
         <h1 id="page-title">Ideias boas merecem <span>um lugar só delas.</span></h1>
-        <p class="intro-copy">Prompts pessoais e de trabalho num só lugar. Avalie, anote e copie quando precisar.</p>
+        <p class="intro-copy">Seus prompts num só lugar. Avalie, anote e copie quando precisar.</p>
       </section>
 
       <div class="workspace">
@@ -57,19 +57,6 @@
                 <input id="prompt-model" name="model" type="text" placeholder="Ex.: Claude Sonnet" maxlength="100" required>
               </div>
 
-              <fieldset class="field-row">
-                <legend>Caderno</legend>
-                <div class="segmented">
-                  <label class="segment">
-                    <input type="radio" name="notebook" value="pessoal" checked>
-                    <span>Pessoal</span>
-                  </label>
-                  <label class="segment">
-                    <input type="radio" name="notebook" value="trabalho">
-                    <span>Trabalho</span>
-                  </label>
-                </div>
-              </fieldset>
 
               <div class="field-row">
                 <label for="prompt-content">Prompt</label>
@@ -101,13 +88,6 @@
             <h2 id="library-title" class="section-title" tabindex="-1">
               Biblioteca <span id="prompt-count" class="count-badge">0</span>
             </h2>
-            <nav class="notebook-filter" aria-label="Filtrar por caderno">
-              <ul class="segmented" role="list">
-                <li><button class="segment" type="button" data-notebook="all" aria-pressed="true">Todos <span class="segment-count" data-count-for="all">0</span></button></li>
-                <li><button class="segment" type="button" data-notebook="pessoal" aria-pressed="false">Pessoal <span class="segment-count" data-count-for="pessoal">0</span></button></li>
-                <li><button class="segment" type="button" data-notebook="trabalho" aria-pressed="false">Trabalho <span class="segment-count" data-count-for="trabalho">0</span></button></li>
-              </ul>
-            </nav>
           </div>
           <p id="status-message" class="status-message" role="alert"></p>
           <div id="prompt-list"></div>
@@ -125,7 +105,6 @@
         <header class="viewer-header">
           <div class="viewer-swap">
             <p class="viewer-eyebrow">
-              <span class="notebook-badge" data-field="notebook"></span>
               <span data-field="model"></span>
             </p>
             <h2 id="viewer-title" class="viewer-title" data-field="title"></h2>

@@ -3,7 +3,6 @@
 // private mode) throws before memory and the UI drift out of sync.
 
 import { parseStoredPrompts, touch } from "./prompt-model.js";
-import { ALL_NOTEBOOKS } from "./notebooks.js";
 
 const STORAGE_KEY = "prompt-vault-prompts";
 
@@ -42,19 +41,9 @@ export function getPrompt(id) {
   return prompts.get(id);
 }
 
-/** Newest first, optionally narrowed to one notebook. */
-export function listPrompts(notebook = ALL_NOTEBOOKS) {
-  return [...prompts.values()]
-    .filter((prompt) => notebook === ALL_NOTEBOOKS || prompt.notebook === notebook)
-    .sort((a, b) => Date.parse(b.metadata.createdAt) - Date.parse(a.metadata.createdAt));
-}
-
-export function countByNotebook() {
-  const counts = new Map([[ALL_NOTEBOOKS, prompts.size]]);
-  for (const { notebook } of prompts.values()) {
-    counts.set(notebook, (counts.get(notebook) ?? 0) + 1);
-  }
-  return counts;
+/** Newest first. */
+export function listPrompts() {
+  return [...prompts.values()].sort((a, b) => Date.parse(b.metadata.createdAt) - Date.parse(a.metadata.createdAt));
 }
 
 export function addPrompts(newPrompts) {

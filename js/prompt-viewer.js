@@ -5,7 +5,6 @@
 
 import { copyText } from "./clipboard.js";
 import { countCharacters, formatDate, formatNumber, formatTokenRange } from "./format.js";
-import { notebookLabel } from "./notebooks.js";
 
 const COPY_RESET_DELAY = 2000;
 const ARROW_STEPS = new Map([
@@ -40,12 +39,10 @@ export function initPromptViewer(dialog, { getPrompt, getTrigger }) {
   }
 
   function show(promptId) {
-    const { title, content, notebook, isCode, metadata } = getPrompt(promptId);
+    const { title, content, isCode, metadata } = getPrompt(promptId);
     currentId = promptId;
 
     field("title").textContent = title;
-    field("notebook").textContent = notebookLabel(notebook);
-    field("notebook").dataset.notebook = notebook ?? "";
     field("model").textContent = metadata.model;
     field("content").textContent = content;
     field("content").classList.toggle("is-code", isCode);

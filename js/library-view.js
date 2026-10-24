@@ -4,28 +4,24 @@
 import { html, render } from "./html.js";
 import { icon } from "./icons.js";
 import { CONFIDENCE_LABELS, formatDate, formatTokenRange, previewOf } from "./format.js";
-import { ALL_NOTEBOOKS, notebookLabel } from "./notebooks.js";
 
 const RATING_VALUES = [1, 2, 3, 4, 5];
 
-export function renderLibrary(container, prompts, { notebook, ...cardState }) {
+export function renderLibrary(container, prompts, cardState) {
   const view = prompts.length
     ? html`<ul class="prompt-grid" role="list">${prompts.map((prompt) => promptCard(prompt, cardState))}</ul>`
-    : emptyState(notebook);
+    : emptyState();
   render(container, view);
 }
 
 function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId }) {
-  const { id, title, content, notebook } = prompt;
+  const { id, title, content } = prompt;
   const titleId = `prompt-${id}-title`;
   return html`
     <li>
       <article class="prompt-card ${id === newPromptId && "is-new"}" data-prompt-id="${id}" aria-labelledby="${titleId}">
         <header class="card-header">
-          <div class="card-heading">
-            ${notebook && html`<span class="notebook-badge" data-notebook="${notebook}">${notebookLabel(notebook)}</span>`}
-            <h3 class="card-title" id="${titleId}">${title}</h3>
-          </div>
+          <h3 class="card-title" id="${titleId}">${title}</h3>
           <div class="card-actions">
             <button class="icon-button copy-button" type="button" data-action="copy" data-state="idle" aria-label="Copiar ${title}" title="Copiar prompt">
               ${icon("copy", { className: "icon-idle" })}${icon("check", { strokeWidth: 2.5, className: "icon-done" })}
@@ -138,15 +134,12 @@ function noteEditor({ id, content }) {
     </li>`;
 }
 
-function emptyState(notebook) {
-  const isFiltered = notebook !== ALL_NOTEBOOKS;
+function emptyState() {
   return html`
     <div class="empty-state">
       ${icon("tray", { strokeWidth: 1.5 })}
-      <h3>${isFiltered ? `Nada em ${notebookLabel(notebook)} ainda` : "Nenhum prompt ainda"}</h3>
-      <p>${isFiltered
-        ? "Salve um prompt neste caderno e ele aparece aqui."
-        : "Salve um prompt que funcionou bem e ele aparece aqui, pronto para copiar."}</p>
-      ${!isFiltered && html`<button class="text-button is-tinted" type="button" data-action="load-samples">Carregar exemplos</button>`}
+      <h3>Nenhum prompt ainda</h3>
+      <p>Salve um prompt que funcionou bem e ele aparece aqui, pronto para copiar.</p>
+      <button class="text-button is-tinted" type="button" data-action="load-samples">Carregar exemplos</button>
     </div>`;
 }
