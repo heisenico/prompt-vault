@@ -26,7 +26,11 @@ export function renderLibrary(container, prompts, view) {
   renderKeyedList(list, libraryItems(prompts, view));
 }
 
-/** What re-renders a card: stored data and card UI state. Drafts and the expanded state are left out on purpose. */
+/**
+ * What re-renders a card: stored data and card UI state. Drafts (new-note and note-edit) are left out on purpose.
+ * Markup is built lazily: keyed-render calls `render()` only for cards it creates or replaces.
+ * @returns {Array<{ key: string, signature: string, render: () => { markup: string } }>}
+ */
 export function libraryItems(prompts, view) {
   return prompts.map((prompt) => {
     const { id } = prompt;
@@ -36,12 +40,12 @@ export function libraryItems(prompts, view) {
     return {
       key: id,
       signature: JSON.stringify([prompt, editingNoteId, confirmingDelete, cardError]),
-      view: promptCard(prompt, view),
+      render: () => promptCard(prompt, view),
     };
   });
 }
 
-function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId, noteDrafts }) {
+function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId, noteDrafts, noteEditDraft }) {
   const { id, title, content } = prompt;
   const titleId = `prompt-${id}-title`;
   return html`
@@ -64,7 +68,7 @@ function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId, no
         </button>
         ${metadataSection(prompt.metadata)}
         ${ratingGroup(prompt)}
-        ${notesSection(prompt, editingNoteId, noteDrafts.get(id) ?? "")}
+        ${notesSection(prompt, editingNoteId, noteDrafts.get(id) ?? "", noteEditDraft)}
       </article>`;
 }
 
@@ -114,7 +118,7 @@ function ratingGroup({ title, rating }) {
     </div>`;
 }
 
-function notesSection({ id, notes }, editingNoteId, draft) {
+function notesSection({ id, notes }, editingNoteId, draft, noteEditDraft) {
   const headingId = `prompt-${id}-notes`;
   const inputId = `prompt-${id}-new-note`;
   return html`
@@ -122,11 +126,12 @@ function notesSection({ id, notes }, editingNoteId, draft) {
       <h4 class="notes-title" id="${headingId}">Notas</h4>
       ${notes.length > 0 && html`
         <ul class="notes-list" role="list">
-          ${notes.map((note) => (note.id === editingNoteId ? noteEditor(note) : noteItem(note)))}
+          ${notes.map((note) => (note.id === editingNoteId ? noteEditor(note, noteEditDraft) : noteItem(note)))}
         </ul>`}
       <form class="note-form" data-action="add-note">
         <label class="note-input-label" for="${inputId}">Nova nota</label>
-        <textarea class="note-input" id="${inputId}" name="note" rows="2" placeholder="O que funcionou? O que ajustar?">${draft}</textarea>
+        <textarea class="note-input" id="${inputId}" name="note" rows="2" placeholder="O que funcionou? O que ajustar?">
+${draft}</textarea>
         <button class="text-button is-tinted" type="submit">Adicionar nota</button>
       </form>
     </section>`;
@@ -144,13 +149,16 @@ function noteItem({ id, content }) {
     </li>`;
 }
 
-function noteEditor({ id, content }) {
+/** The first newline after <textarea> is dropped by the parser, so one is always emitted to keep a leading one in the text. */
+function noteEditor({ id, content }, noteEditDraft) {
   const inputId = `note-${id}-editor`;
+  const text = noteEditDraft?.noteId === id ? noteEditDraft.text : content;
   return html`
     <li class="note-item" data-note-id="${id}">
       <form class="note-edit-form" data-action="save-note">
         <label class="visually-hidden" for="${inputId}">Editar nota</label>
-        <textarea class="note-input" id="${inputId}" name="note" rows="2" required>${content}</textarea>
+        <textarea class="note-input" id="${inputId}" name="note" rows="2" required>
+${text}</textarea>
         <div class="note-actions">
           <button class="text-button is-tinted" type="submit">Salvar</button>
           <button class="text-button" type="button" data-action="cancel-note">Cancelar</button>

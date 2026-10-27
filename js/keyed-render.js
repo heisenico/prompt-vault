@@ -4,17 +4,21 @@
 
 import { planListUpdate } from "./keyed-list.js";
 
+/** Signature each <li> was rendered with. Kept off the DOM: signatures embed whole prompts. */
+const signatures = new WeakMap();
+
 /**
  * @param {HTMLUListElement} list
- * @param {Array<{ key: string, signature: string, view: { markup: string } }>} items
- *   `view` is the markup inside each <li>; this function owns the <li> itself.
+ * @param {Array<{ key: string, signature: string, render: () => { markup: string } }>} items
+ *   `render` returns the markup inside each <li>; this function owns the <li> itself
+ *   and calls `render` only for items it creates or replaces.
  */
 export function renderKeyedList(list, items) {
   const nodes = new Map();
   const previous = new Map();
   for (const node of list.children) {
     nodes.set(node.dataset.key, node);
-    previous.set(node.dataset.key, node.dataset.signature);
+    previous.set(node.dataset.key, signatures.get(node));
   }
 
   const { removals, steps } = planListUpdate(
@@ -23,14 +27,14 @@ export function renderKeyedList(list, items) {
   );
   for (const key of removals) nodes.get(key).remove();
 
-  const viewByKey = new Map(items.map((item) => [item.key, item]));
+  const itemByKey = new Map(items.map((item) => [item.key, item]));
   const canMove = typeof list.moveBefore === "function";
   let placed = null;
 
   for (const { key, action } of steps) {
     let node = nodes.get(key);
     if (action !== "keep") {
-      const fresh = createItem(viewByKey.get(key));
+      const fresh = createItem(itemByKey.get(key));
       if (node) node.replaceWith(fresh);
       node = fresh;
     }
@@ -43,12 +47,12 @@ export function renderKeyedList(list, items) {
   }
 }
 
-function createItem({ key, signature, view }) {
+function createItem({ key, signature, render }) {
   const template = document.createElement("template");
-  template.innerHTML = view.markup;
+  template.innerHTML = render().markup;
   const item = document.createElement("li");
   item.dataset.key = key;
-  item.dataset.signature = signature;
+  signatures.set(item, signature);
   item.append(template.content);
   return item;
 }
