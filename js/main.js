@@ -319,7 +319,7 @@ async function importLibrary() {
   try {
     const incoming = parseLibraryFile(await file.text());
     const { fresh, duplicates } = partitionImport(store.listPrompts(), incoming);
-    if (!attempt(() => store.addPrompts(fresh), "Não foi possível importar.")) return;
+    if (fresh.length > 0 && !attempt(() => store.addPrompts(fresh), "Não foi possível importar.")) return;
     announce(`${fresh.length} importados, ${duplicates} já existiam`);
   } catch (error) {
     showError(error.message);

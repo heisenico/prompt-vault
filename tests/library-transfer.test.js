@@ -39,6 +39,12 @@ test("importing the same prompts twice adds nothing", () => {
   assert.deepEqual(partitionImport([prompts[0]], prompts), { fresh: [prompts[1]], duplicates: 1 });
 });
 
+test("repeated ids inside the incoming file count as duplicates", () => {
+  const a = promptFixture({ id: "a" });
+  const a2 = promptFixture({ id: "a", title: "Outro" });
+  assert.deepEqual(partitionImport([], [a, a2]), { fresh: [a], duplicates: 1 });
+});
+
 test("file name uses the local date", () => {
   assert.equal(exportFileName(new Date(2026, 9, 26, 23, 30)), "prompt-vault-2026-10-26.json");
   assert.equal(exportFileName(new Date(2026, 0, 5, 1, 0)), "prompt-vault-2026-01-05.json");

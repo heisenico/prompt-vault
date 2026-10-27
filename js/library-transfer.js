@@ -25,10 +25,15 @@ export function parseLibraryFile(text) {
   return parseStoredPrompts(JSON.stringify(list)).prompts;
 }
 
-/** Splits incoming prompts into new ones and ones whose id is already in the library. */
+/** Splits incoming prompts into new ones and duplicates: ids already in the library or repeated within the file. */
 export function partitionImport(existing, incoming) {
   const knownIds = new Set(existing.map(({ id }) => id));
-  const fresh = incoming.filter(({ id }) => !knownIds.has(id));
+  const fresh = [];
+  for (const prompt of incoming) {
+    if (knownIds.has(prompt.id)) continue;
+    knownIds.add(prompt.id);
+    fresh.push(prompt);
+  }
   return { fresh, duplicates: incoming.length - fresh.length };
 }
 
