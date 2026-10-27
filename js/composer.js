@@ -47,18 +47,39 @@ export function initComposer(form, { panel, toggle, onSubmit, onFill = () => {} 
   function readDraft() {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      const draft = JSON.parse(raw);
+      if (draft === null || typeof draft !== "object" || Array.isArray(draft)) {
+        throw new TypeError("O rascunho salvo não é um objeto.");
+      }
+      const text = (value) => (typeof value === "string" ? value : "");
+      return {
+        title: text(draft.title),
+        model: text(draft.model),
+        content: text(draft.content),
+        isCode: draft.isCode === true,
+      };
     } catch (error) {
       console.error("Não foi possível ler o rascunho salvo:", error);
+      discardDraft();
       return null;
     }
+  }
+
+  function isBlank({ title, model, content, isCode }) {
+    return !title.trim() && !model.trim() && !content.trim() && !isCode;
   }
 
   function writeDraft() {
     draftTimer = null;
     if (editingId) return;
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(readFields()));
+      const fields = readFields();
+      if (isBlank(fields)) {
+        discardDraft();
+        return;
+      }
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(fields));
     } catch (error) {
       console.error("Não foi possível salvar o rascunho:", error);
     }
@@ -82,7 +103,7 @@ export function initComposer(form, { panel, toggle, onSubmit, onFill = () => {} 
 
   function restoreDraft() {
     const draft = readDraft();
-    if (!draft) return false;
+    if (!draft || isBlank(draft)) return false;
     fill(draft);
     return true;
   }
