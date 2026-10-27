@@ -3,6 +3,7 @@ import { trustedHTML } from "./html.js";
 const ICON_PATHS = {
   xmark: ["M6 6l12 12", "M18 6L6 18"],
   check: ["M5 12.5l4.5 4.5L19 7.5"],
+  chevron: ["M7 10l5 5 5-5"],
   copy: [
     "M10 8h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z",
     "M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2",

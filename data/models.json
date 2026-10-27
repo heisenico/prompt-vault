@@ -1,0 +1,116 @@
+{
+  "source": "https://openrouter.ai/api/v1/models",
+  "updatedAt": "2026-10-26",
+  "providers": [
+    {
+      "name": "OpenAI",
+      "models": [
+        "GPT-6.1 Terra Pro",
+        "GPT-6.1 Terra",
+        "GPT-6.1 Sol Pro",
+        "GPT-6.1 Sol",
+        "GPT-6 Luna Pro",
+        "GPT-6 Luna"
+      ]
+    },
+    {
+      "name": "Anthropic",
+      "models": [
+        "Claude Haiku 5.5",
+        "Claude Sonnet 5.5",
+        "Claude Opus 5.5",
+        "Claude Fable 5.1",
+        "Claude Opus 5",
+        "Claude Sonnet 5"
+      ]
+    },
+    {
+      "name": "Google",
+      "models": [
+        "Gemini 4 Argon",
+        "Nano Banana 2.1",
+        "Gemini 3.8 Flash",
+        "Gemini 3.7 Flash",
+        "Gemini 3.6 Flash",
+        "Gemini 3.5 Flash Lite"
+      ]
+    },
+    {
+      "name": "xAI",
+      "models": [
+        "Grok 4.7",
+        "Grok 4.6",
+        "Grok 4.5",
+        "Grok Build 0.1",
+        "Grok 4.3",
+        "Grok 4.20 Multi-Agent"
+      ]
+    },
+    {
+      "name": "Meta",
+      "models": [
+        "Muse Spark Open",
+        "Muse Wonder",
+        "Muse Spark 1.3 Contributor",
+        "Muse Spark 1.3",
+        "Muse Spark 1.2 Contributor",
+        "Muse Glimmer 30B"
+      ]
+    },
+    {
+      "name": "DeepSeek",
+      "models": [
+        "DeepSeek V4.1 Flash 1017",
+        "DeepSeek V4.1 Flash",
+        "DeepSeek V4 Flash Vision Exp",
+        "DeepSeek V4 Pro 0813",
+        "DeepSeek V4 Flash 0731",
+        "DeepSeek V4 Pro 0423"
+      ]
+    },
+    {
+      "name": "Mistral",
+      "models": [
+        "Mistral Large 4",
+        "Mistral Medium 3.5",
+        "Mistral Small 4",
+        "Devstral 2 2512",
+        "Ministral 3 14B 2512",
+        "Ministral 3 8B 2512"
+      ]
+    },
+    {
+      "name": "Qwen",
+      "models": [
+        "Qwen3.8 Max Prime",
+        "Qwen3.8 Omni Flash",
+        "Qwen3.8 Max (0902)",
+        "Qwen3.8 Flash",
+        "Qwen3.8 27B",
+        "Qwen3.8 2.4T A95B"
+      ]
+    },
+    {
+      "name": "Moonshot AI",
+      "models": [
+        "Kimi K3.1 Pro",
+        "Kimi K3",
+        "Kimi K2.7 Code",
+        "Kimi K2.6",
+        "Kimi K2.5",
+        "Kimi K2 Thinking"
+      ]
+    },
+    {
+      "name": "Z.ai",
+      "models": [
+        "GLM 5.3 Prime",
+        "GLM 5.3 FlashX",
+        "GLM 5.3 Flash",
+        "GLM 5.3",
+        "GLM 5.2",
+        "GLM 5.1"
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { createNote, createPrompt } from "./prompt-model.js";
 import { renderLibrary } from "./library-view.js";
 import { renderCheckup } from "./checkup.js";
 import { initPromptViewer } from "./prompt-viewer.js";
+import { initModelCombobox } from "./model-combobox.js";
 import { copyText } from "./clipboard.js";
 import { announce, clearError, showError, STORAGE_HINT } from "./feedback.js";
 import { formatList } from "./format.js";
@@ -291,6 +292,11 @@ promptList.addEventListener("click", handleLibraryClick);
 promptList.addEventListener("submit", handleLibrarySubmit);
 promptList.addEventListener("keydown", handleLibraryKeydown);
 store.subscribe(renderApp);
+
+// Without the suggestion list the model field still works as plain text.
+initModelCombobox(form.elements.model).catch((error) => {
+  console.error("Falha ao carregar a lista de modelos:", error);
+});
 
 try {
   store.loadPrompts();

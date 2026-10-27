@@ -20,6 +20,7 @@ Then open <http://localhost:8000>. Copy-to-clipboard needs a secure context (`lo
   - **Copiar prompt** copies the full text.
   - **← / →** (or the arrow buttons) move to the previous or next prompt.
   - **Esc**, the close button, or a click outside the panel closes it, and focus returns to the card.
+- **Model:** the Modelo field suggests recent models as you type (↓ opens the list, Enter picks). Any other name still saves. The list is a bundled snapshot; refresh it with `node scripts/update-models.mjs`. The app itself never fetches it from the network.
 - **Try it:** with an empty library, **Carregar exemplos** loads three sample prompts.
 
 ## Project structure
@@ -38,10 +39,13 @@ js/store.js             Prompt library in a Map, kept in sync with localStorage
 js/prompt-model.js      Creating, estimating, validating and upgrading prompts
 js/library-view.js      Card and empty-state markup
 js/prompt-viewer.js     Full-view dialog behavior
+js/model-combobox.js    Model field suggestions (ARIA combobox)
 js/checkup.js           Live prompt checkup
 js/html.js              Escaping `html` tagged template
 js/icons.js, format.js, clipboard.js, feedback.js   Small helpers
 data/sample-prompts.json  Sample prompts
+data/models.json        Bundled model list for the combobox
+scripts/update-models.mjs  Refreshes data/models.json from OpenRouter
 ```
 
 ## Browser support

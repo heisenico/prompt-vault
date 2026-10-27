@@ -177,6 +177,139 @@
   font-size: var(--text-footnote);
 }
 
+/* ---------- Model combobox ---------- */
+
+.model-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.model-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.model-toggle {
+  display: grid;
+  width: 1.875rem;
+  height: 1.875rem;
+  place-items: center;
+  margin-inline-end: -0.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.model-toggle:hover {
+  background: var(--color-fill);
+}
+
+.model-toggle .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: rotate var(--duration-base) var(--ease-out);
+}
+
+.model-toggle[aria-expanded="true"] .icon {
+  rotate: 180deg;
+}
+
+/* Top-layer popover; model-combobox.js sets top/bottom, left, width and --available-height. */
+.model-popover {
+  position: fixed;
+  display: none;
+  max-height: min(20rem, var(--available-height, 20rem));
+  flex-direction: column;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-popover);
+  color: var(--color-text);
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity var(--duration-fast) var(--ease-out), translate var(--duration-fast) var(--ease-out);
+}
+
+.model-popover:popover-open {
+  display: flex;
+}
+
+@starting-style {
+  .model-popover:popover-open {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+
+.model-options {
+  margin: 0;
+  padding: 0 0 var(--space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.model-options ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.model-group-label {
+  position: sticky;
+  top: 0;
+  display: block;
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.model-option {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding-inline: var(--space-4);
+  cursor: pointer;
+}
+
+.model-option:hover {
+  background: var(--color-fill);
+}
+
+.model-option[aria-selected="true"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.model-footnote {
+  padding: var(--space-2) var(--space-4);
+  border-top: 0.5px solid var(--color-separator);
+  color: var(--color-text-secondary);
+  font-size: var(--text-caption);
+}
+
+@media (forced-colors: active) {
+  .model-popover {
+    border: 1px solid CanvasText;
+  }
+
+  .model-option[aria-selected="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
 /* ---------- Prompt checkup ---------- */
 
 .prompt-checkup {
