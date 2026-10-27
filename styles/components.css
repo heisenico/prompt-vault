@@ -976,3 +976,56 @@ label.text-button {
     scale: 0.98;
   }
 }
+
+/* ---------- Library toolbar: search and sort ---------- */
+
+.library-toolbar {
+  display: flex;
+  flex: 1 0 100%;
+  gap: var(--space-2);
+}
+
+.search-field {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.search-field .icon {
+  position: absolute;
+  inset-inline-start: 0.875rem;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.library-toolbar input[type="search"],
+.library-toolbar select {
+  block-size: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-control);
+  background-color: var(--color-fill);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.library-toolbar input[type="search"] {
+  inline-size: 100%;
+  padding-inline: 2.5rem 0.875rem;
+}
+
+.library-toolbar select {
+  padding-inline: 0.875rem;
+}
+
+.library-toolbar input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.library-toolbar input:focus-visible,
+.library-toolbar select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

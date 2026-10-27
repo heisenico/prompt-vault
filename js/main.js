@@ -1,6 +1,7 @@
 import * as store from "./store.js";
 import { createNote, createPrompt } from "./prompt-model.js";
 import { renderLibrary } from "./library-view.js";
+import { isSortOrder, queryLibrary } from "./library-query.js";
 import { renderCheckup } from "./checkup.js";
 import { initPromptViewer } from "./prompt-viewer.js";
 import { initComposer } from "./composer.js";
@@ -12,6 +13,9 @@ import { exportFileName, importSummary, parseLibraryFile, partitionImport, seria
 
 const SAMPLE_PROMPTS_URL = new URL("../data/sample-prompts.json", import.meta.url);
 const COPY_RESET_DELAY = 1600;
+const SORT_KEY = "prompt-vault-sort";
+const DEFAULT_SORT = "recent";
+const RESULT_ANNOUNCE_DELAY = 400;
 
 const form = document.querySelector("#prompt-form");
 const checkup = document.querySelector("#prompt-checkup");
@@ -21,9 +25,27 @@ const libraryTitle = document.querySelector("#library-title");
 const exportButton = document.querySelector('[data-transfer="export"]');
 const importInput = document.querySelector('[data-transfer="import"]');
 const transferStatus = document.querySelector('[data-transfer="status"]');
+const searchInput = document.querySelector("#library-search");
+const sortSelect = document.querySelector("#library-sort");
+const promptViewer = document.querySelector("#prompt-viewer");
+
+/** An unreadable or unknown stored sort falls back to "recent", and says so in the console. */
+function readStoredSort() {
+  try {
+    const stored = localStorage.getItem(SORT_KEY);
+    if (stored === null) return DEFAULT_SORT;
+    if (isSortOrder(stored)) return stored;
+    console.error(`Ordenação salva inválida (${JSON.stringify(stored)}); usando "${DEFAULT_SORT}".`);
+  } catch (error) {
+    console.error("Falha ao ler a ordenação salva:", error);
+  }
+  return DEFAULT_SORT;
+}
 
 /** UI state that isn't part of the stored library. */
 const view = {
+  query: "",
+  sort: readStoredSort(),
   editingNoteId: null,
   confirmingDeleteId: null,
   newPromptId: null,
@@ -47,12 +69,17 @@ const viewer = initPromptViewer(document.querySelector("#prompt-viewer"), {
 
 // ---------- Rendering ----------
 
+/** The prompts the library currently shows, in order. */
+function visiblePrompts(all = store.listPrompts()) {
+  return queryLibrary(all, view);
+}
+
 function renderApp() {
-  const prompts = store.listPrompts();
-  renderLibrary(promptList, prompts, view);
-  promptCount.textContent = prompts.length;
-  if (prompts.length === 0 && composer.editingId() === null) composer.open({ focus: false });
-  exportButton.disabled = prompts.length === 0;
+  const all = store.listPrompts();
+  renderLibrary(promptList, visiblePrompts(all), view, { total: all.length });
+  promptCount.textContent = all.length;
+  if (all.length === 0 && composer.editingId() === null) composer.open({ focus: false });
+  exportButton.disabled = all.length === 0;
   view.newPromptId = null;
 }
 
@@ -94,7 +121,14 @@ function savePrompt(fields) {
 
   const prompt = createPrompt(fields);
   view.newPromptId = prompt.id;
+  // The store notifies synchronously, so clear the search first or the new prompt could be filtered out.
+  const previousQuery = view.query;
+  clearSearch({ render: false });
   const saved = attempt(() => store.addPrompts([prompt]), "Não foi possível salvar o prompt.");
+  if (!saved) {
+    view.query = previousQuery;
+    searchInput.value = previousQuery;
+  }
   if (saved) announce(`“${fields.title}” salvo na biblioteca`);
   return saved;
 }
@@ -107,7 +141,7 @@ function updateCheckup() {
 
 const cardActions = {
   open(promptId, control) {
-    const sequence = store.listPrompts().map(({ id }) => id);
+    const sequence = visiblePrompts().map(({ id }) => id);
     viewer.open(promptId, { trigger: control, sequence });
   },
 
@@ -175,6 +209,11 @@ const cardActions = {
       announce("Nota excluída");
       findInCard(promptId, ".note-form textarea").focus();
     }
+  },
+
+  "clear-search"() {
+    clearSearch();
+    searchInput.focus();
   },
 
   async "load-samples"() {
@@ -311,6 +350,62 @@ function handleLibrarySubmit(event) {
   formActions[noteForm.dataset.action](promptId, noteForm);
 }
 
+// ---------- Search and sort ----------
+
+let resultsTimer = null;
+
+function clearSearch({ render = true } = {}) {
+  view.query = "";
+  searchInput.value = "";
+  clearTimeout(resultsTimer);
+  if (render) renderApp();
+}
+
+/** Debounced, so typing doesn't queue a stream of announcements. */
+function announceResults() {
+  clearTimeout(resultsTimer);
+  if (!view.query.trim()) return;
+  resultsTimer = setTimeout(() => {
+    announce(`${visiblePrompts().length} de ${store.listPrompts().length} prompts`);
+  }, RESULT_ANNOUNCE_DELAY);
+}
+
+function handleSearchInput() {
+  view.query = searchInput.value;
+  renderApp();
+  announceResults();
+}
+
+function handleSearchKeydown(event) {
+  if (event.key === "Escape" && searchInput.value !== "") {
+    event.preventDefault();
+    clearSearch();
+  }
+}
+
+function handleSortChange() {
+  const { value } = sortSelect;
+  if (!isSortOrder(value)) throw new RangeError(`Ordenação desconhecida: ${value}`);
+  view.sort = value;
+  try {
+    localStorage.setItem(SORT_KEY, value);
+  } catch (error) {
+    console.error("Falha ao salvar a ordenação:", error);
+  }
+  renderApp();
+  announceResults();
+}
+
+/** "/" focuses the search unless the user is typing somewhere or a dialog is open. */
+function handleShortcutKeydown(event) {
+  if (event.key !== "/" || event.defaultPrevented) return;
+  if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+  if (event.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (promptViewer.open) return;
+  event.preventDefault();
+  searchInput.focus();
+}
+
 // ---------- Export and import ----------
 
 function exportLibrary() {
@@ -356,6 +451,11 @@ promptList.addEventListener("click", handleLibraryClick);
 promptList.addEventListener("input", handleLibraryInput);
 promptList.addEventListener("submit", handleLibrarySubmit);
 promptList.addEventListener("keydown", handleLibraryKeydown);
+searchInput.addEventListener("input", handleSearchInput);
+searchInput.addEventListener("keydown", handleSearchKeydown);
+sortSelect.addEventListener("change", handleSortChange);
+document.addEventListener("keydown", handleShortcutKeydown);
+sortSelect.value = view.sort;
 exportButton.addEventListener("click", exportLibrary);
 importInput.addEventListener("change", importLibrary);
 store.subscribe(renderApp);

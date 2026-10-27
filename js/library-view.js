@@ -13,9 +13,9 @@ const RATING_VALUES = [1, 2, 3, 4, 5];
  * didn't change keep their DOM, focus and unsaved note drafts. It is swapped
  * with the empty state only when the library goes empty <-> non-empty.
  */
-export function renderLibrary(container, prompts, view) {
+export function renderLibrary(container, prompts, view, { total }) {
   if (prompts.length === 0) {
-    render(container, emptyState());
+    render(container, total > 0 ? noResults(view.query) : emptyState());
     return;
   }
   let list = container.querySelector(":scope > ul.prompt-grid");
@@ -165,6 +165,16 @@ ${text}</textarea>
         </div>
       </form>
     </li>`;
+}
+
+/** Shown when the library has prompts but none match the search. */
+export function noResults(query) {
+  return html`
+    <div class="empty-state">
+      ${icon("search", { strokeWidth: 1.5 })}
+      <h3>Nada encontrado para “${query}”.</h3>
+      <button class="text-button is-tinted" type="button" data-action="clear-search">Limpar busca</button>
+    </div>`;
 }
 
 function emptyState() {

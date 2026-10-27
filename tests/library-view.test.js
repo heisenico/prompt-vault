@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { libraryItems } from "../js/library-view.js";
+import { libraryItems, noResults } from "../js/library-view.js";
 import { createNote, createPrompt } from "../js/prompt-model.js";
 
 const make = (title) => createPrompt({ title, model: "gpt-4o", content: "conteúdo", isCode: false });
@@ -86,4 +86,11 @@ test("both textareas start with a newline so a leading newline in a draft surviv
   const opens = markup.match(/<textarea[^>]*>[^]?/g);
   assert.equal(opens.length, 2);
   for (const open of opens) assert.ok(open.endsWith(">\n"), open);
+});
+
+test("noResults names the query, escaped, and offers to clear the search", () => {
+  const { markup } = noResults('<img src=x onerror="a">');
+  assert.match(markup, /Nada encontrado para “&lt;img src=x onerror=&quot;a&quot;&gt;”\./);
+  assert.doesNotMatch(markup, /<img/);
+  assert.match(markup, /<button class="text-button is-tinted" type="button" data-action="clear-search">Limpar busca<\/button>/);
 });
