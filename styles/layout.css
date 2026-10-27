@@ -23,13 +23,12 @@
   gap: var(--space-4);
 }
 
-.intro {
-  padding-block: clamp(1.75rem, 5vw, 2.75rem) clamp(1.5rem, 4vw, 2rem);
+.reading-width {
+  width: min(var(--reading-width), 100% - 2 * var(--gutter));
 }
 
-.workspace {
-  display: grid;
-  gap: 2.25rem;
+main {
+  padding-block-start: var(--space-5);
 }
 
 .library-header {
@@ -51,20 +50,4 @@
   border-top: 0.5px solid var(--color-separator);
   color: var(--color-text-secondary);
   font-size: var(--text-caption);
-}
-
-@media (min-width: 54rem) {
-  .workspace {
-    grid-template-columns: minmax(18.75rem, 0.82fr) minmax(0, 1.5fr);
-    align-items: start;
-    gap: var(--space-6);
-  }
-}
-
-/* Only pin the editor when the viewport is tall enough to show all of it. */
-@media (min-width: 54rem) and (min-height: 52rem) {
-  .editor-panel {
-    position: sticky;
-    top: 4.75rem;
-  }
 }

@@ -57,23 +57,6 @@
 
 /* ---------- Headings ---------- */
 
-.intro h1 {
-  margin-block-end: var(--space-2);
-  font-family: var(--font-display);
-  font-size: var(--text-large-title);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.01em;
-}
-
-.intro h1 span {
-  color: var(--color-text-secondary);
-}
-
-.intro-copy {
-  color: var(--color-text-secondary);
-}
-
 .section-title {
   display: flex;
   align-items: center;
@@ -84,8 +67,24 @@
   line-height: 1.27;
 }
 
-.editor-panel .section-title {
+.composer {
+  margin-block-end: var(--space-5);
+}
+
+.composer .section-title {
   margin-block-end: var(--space-3);
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: 1.25rem;
+}
+
+.composer-actions .primary-button {
+  flex: 1;
+  margin-block-start: 0;
 }
 
 .section-title:focus {
@@ -439,6 +438,26 @@
 }
 
 .primary-button:active {
+  scale: 0.98;
+}
+
+/* The primary button at toolbar size */
+.primary-pill {
+  min-height: 2.75rem;
+  padding-inline: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 600;
+  transition: background var(--duration-fast) var(--ease-out), scale var(--duration-fast) var(--ease-out);
+}
+
+.primary-pill:hover {
+  background: var(--color-accent-hover);
+}
+
+.primary-pill:active {
   scale: 0.98;
 }
 

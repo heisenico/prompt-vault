@@ -3,6 +3,7 @@ import { createNote, createPrompt } from "./prompt-model.js";
 import { renderLibrary } from "./library-view.js";
 import { renderCheckup } from "./checkup.js";
 import { initPromptViewer } from "./prompt-viewer.js";
+import { initComposer } from "./composer.js";
 import { initModelCombobox } from "./model-combobox.js";
 import { copyText } from "./clipboard.js";
 import { announce, clearError, showError, STORAGE_HINT } from "./feedback.js";
@@ -32,6 +33,13 @@ const view = {
   noteEditDraft: null,
 };
 
+const composer = initComposer(form, {
+  panel: document.querySelector("#composer"),
+  toggle: document.querySelector("#composer-toggle"),
+  onSubmit: savePrompt,
+  onFill: updateCheckup,
+});
+
 const viewer = initPromptViewer(document.querySelector("#prompt-viewer"), {
   getPrompt: store.getPrompt,
   getTrigger: (promptId) => findInCard(promptId, '[data-action="open"]'),
@@ -43,6 +51,7 @@ function renderApp() {
   const prompts = store.listPrompts();
   renderLibrary(promptList, prompts, view);
   promptCount.textContent = prompts.length;
+  if (prompts.length === 0 && composer.editingId() === null) composer.open({ focus: false });
   exportButton.disabled = prompts.length === 0;
   view.newPromptId = null;
 }
@@ -66,16 +75,6 @@ function attempt(change, failureMessage) {
 
 // ---------- New prompt form ----------
 
-function readForm() {
-  const data = new FormData(form);
-  return {
-    title: data.get("title").trim(),
-    model: data.get("model").trim(),
-    content: data.get("content").trim(),
-    isCode: data.has("isCode"),
-  };
-}
-
 function findMissingFields({ title, model, content }) {
   return [
     [title, "o título", "#prompt-title"],
@@ -84,26 +83,20 @@ function findMissingFields({ title, model, content }) {
   ].filter(([value]) => !value);
 }
 
-function savePrompt(event) {
-  event.preventDefault();
-  const fields = readForm();
-
+/** Validates and stores the composer's fields; returns true when the prompt was saved. */
+function savePrompt(fields) {
   const missing = findMissingFields(fields);
   if (missing.length > 0) {
     showError(`Preencha ${formatList(missing.map(([, label]) => label))} para salvar.`);
     document.querySelector(missing[0][2]).focus();
-    return;
+    return false;
   }
 
   const prompt = createPrompt(fields);
   view.newPromptId = prompt.id;
   const saved = attempt(() => store.addPrompts([prompt]), "Não foi possível salvar o prompt.");
-  if (!saved) return;
-
-  form.reset();
-  updateCheckup();
-  announce(`“${fields.title}” salvo na biblioteca`);
-  form.elements.title.focus();
+  if (saved) announce(`“${fields.title}” salvo na biblioteca`);
+  return saved;
 }
 
 function updateCheckup() {
@@ -357,7 +350,6 @@ async function importLibrary() {
 
 // ---------- Start ----------
 
-form.addEventListener("submit", savePrompt);
 form.elements.content.addEventListener("input", updateCheckup);
 form.elements.isCode.addEventListener("change", updateCheckup);
 promptList.addEventListener("click", handleLibraryClick);

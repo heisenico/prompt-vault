@@ -35,64 +35,59 @@
 
     <p id="announcer" class="visually-hidden" role="status" aria-live="polite"></p>
 
-    <main class="page-width">
-      <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">Ideias boas merecem <span>um lugar só delas.</span></h1>
-        <p class="intro-copy">Seus prompts num só lugar. Avalie, anote e copie quando precisar.</p>
+    <main class="page-width reading-width">
+      <header class="library-header">
+        <h1 id="library-title" class="section-title" tabindex="-1">
+          Biblioteca <span id="prompt-count" class="count-badge">0</span>
+        </h1>
+        <button id="composer-toggle" class="primary-pill" type="button" aria-expanded="false" aria-controls="composer">Novo prompt</button>
+      </header>
+
+      <section id="composer" class="composer" hidden aria-labelledby="form-title">
+        <h2 id="form-title" class="section-title">Novo prompt</h2>
+
+        <form id="prompt-form" novalidate>
+          <div class="grouped-list">
+            <div class="field-row">
+              <label for="prompt-title">Título</label>
+              <input id="prompt-title" name="title" type="text" placeholder="Ex.: Revisar pull request" maxlength="100" required>
+            </div>
+
+            <div class="field-row">
+              <label for="prompt-model">Modelo</label>
+              <input id="prompt-model" name="model" type="text" placeholder="Ex.: Claude Sonnet" maxlength="100" required>
+            </div>
+
+            <div class="field-row">
+              <label for="prompt-content">Prompt</label>
+              <textarea id="prompt-content" name="content" rows="8" placeholder="Escreva ou cole o prompt aqui…" required></textarea>
+            </div>
+
+            <div id="prompt-checkup" class="field-row prompt-checkup" hidden>
+              <div class="checkup-heading">
+                <span class="checkup-label">Checkup</span>
+                <span class="checkup-tokens"></span>
+              </div>
+              <ul class="checkup-list" role="list" aria-label="Partes do prompt"></ul>
+              <p class="checkup-tip"></p>
+            </div>
+
+            <label class="field-row switch-row" for="prompt-is-code">
+              <span>Contém código</span>
+              <input id="prompt-is-code" name="isCode" type="checkbox" role="switch">
+            </label>
+          </div>
+          <p class="group-footer">Código costuma gerar mais tokens, e a estimativa leva isso em conta.</p>
+
+          <div class="composer-actions">
+            <button class="primary-button" type="submit">Salvar prompt</button>
+            <button class="text-button" type="button" data-composer="cancel">Cancelar</button>
+          </div>
+        </form>
       </section>
 
-      <div class="workspace">
-        <section class="editor-panel" aria-labelledby="form-title">
-          <h2 id="form-title" class="section-title">Novo prompt</h2>
-
-          <form id="prompt-form" novalidate>
-            <div class="grouped-list">
-              <div class="field-row">
-                <label for="prompt-title">Título</label>
-                <input id="prompt-title" name="title" type="text" placeholder="Ex.: Revisar pull request" maxlength="100" required>
-              </div>
-
-              <div class="field-row">
-                <label for="prompt-model">Modelo</label>
-                <input id="prompt-model" name="model" type="text" placeholder="Ex.: Claude Sonnet" maxlength="100" required>
-              </div>
-
-
-              <div class="field-row">
-                <label for="prompt-content">Prompt</label>
-                <textarea id="prompt-content" name="content" rows="8" placeholder="Escreva ou cole o prompt aqui…" required></textarea>
-              </div>
-
-              <div id="prompt-checkup" class="field-row prompt-checkup" hidden>
-                <div class="checkup-heading">
-                  <span class="checkup-label">Checkup</span>
-                  <span class="checkup-tokens"></span>
-                </div>
-                <ul class="checkup-list" role="list" aria-label="Partes do prompt"></ul>
-                <p class="checkup-tip"></p>
-              </div>
-
-              <label class="field-row switch-row" for="prompt-is-code">
-                <span>Contém código</span>
-                <input id="prompt-is-code" name="isCode" type="checkbox" role="switch">
-              </label>
-            </div>
-            <p class="group-footer">Código costuma gerar mais tokens, e a estimativa leva isso em conta.</p>
-
-            <button class="primary-button" type="submit">Salvar prompt</button>
-          </form>
-        </section>
-
-        <section class="library-panel" aria-labelledby="library-title">
-          <div class="library-header">
-            <h2 id="library-title" class="section-title" tabindex="-1">
-              Biblioteca <span id="prompt-count" class="count-badge">0</span>
-            </h2>
-          </div>
-          <p id="status-message" class="status-message" role="alert"></p>
-          <div id="prompt-list"></div>
-        </section>
-      </div>
+      <p id="status-message" class="status-message" role="alert"></p>
+      <div id="prompt-list"></div>
     </main>
 
     <footer class="site-footer page-width">

@@ -73,6 +73,7 @@
   --space-6: 2rem;
   --gutter: clamp(1rem, 4vw, 1.5rem);
   --content-width: 70rem;
+  --reading-width: 46rem;
 
   /* Motion */
   --ease-out: cubic-bezier(0.25, 0.8, 0.25, 1);

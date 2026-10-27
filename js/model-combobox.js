@@ -129,6 +129,7 @@ export async function initModelCombobox(input) {
 
   function choose(option) {
     input.value = option.dataset.value;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
     close();
     input.focus();
   }
