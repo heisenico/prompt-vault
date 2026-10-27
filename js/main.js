@@ -198,12 +198,15 @@ const formActions = {
       noteForm.elements.note.focus();
       return;
     }
+    // The store notifies synchronously, so clear the draft before writing; restore it if the write fails.
+    const typed = noteForm.elements.note.value;
+    view.noteDrafts.delete(promptId);
     const added = attempt(
       () => store.updatePrompt(promptId, (prompt) => ({ ...prompt, notes: [...prompt.notes, createNote(content)] })),
       "Não foi possível salvar a nota.",
     );
+    if (!added) view.noteDrafts.set(promptId, typed);
     if (added) {
-      view.noteDrafts.delete(promptId);
       announce("Nota adicionada");
       findInCard(promptId, ".note-form textarea").focus();
     }

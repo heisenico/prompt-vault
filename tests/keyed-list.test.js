@@ -21,6 +21,12 @@ test("missing keys are removed and new keys created in place", () => {
   assert.deepEqual(plan.steps.map((s) => `${s.key}:${s.action}`), ["d:create", "a:keep", "c:keep"]);
 });
 
+test("create, replace and remove in one update", () => {
+  const plan = planListUpdate(prev, [["a", "1"], ["b", "2"], ["d", "1"]]);
+  assert.deepEqual(plan.removals, ["c"]);
+  assert.deepEqual(plan.steps.map((s) => `${s.key}:${s.action}`), ["a:keep", "b:replace", "d:create"]);
+});
+
 test("reordering keeps nodes and follows the new order", () => {
   const plan = planListUpdate(prev, [["c", "1"], ["a", "1"], ["b", "1"]]);
   assert.deepEqual(plan.steps.map((s) => s.key), ["c", "a", "b"]);
