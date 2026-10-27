@@ -35,6 +35,22 @@ export function touch(prompt) {
   return { ...prompt, metadata: { ...prompt.metadata, updatedAt: new Date().toISOString() } };
 }
 
+/** Applies an edit to a prompt's text and model. Rating and notes are kept as they are. */
+export function revisePrompt(prompt, { title, model, content, isCode }) {
+  assertModelName(model);
+  return touch({
+    ...prompt,
+    title,
+    content,
+    isCode,
+    metadata: {
+      ...prompt.metadata,
+      model: model.trim(),
+      tokenEstimate: estimateTokens(content, isCode),
+    },
+  });
+}
+
 /**
  * Brackets the token count between a word-based floor (~0.75 tokens/word)
  * and a character-based ceiling (~4 chars/token). Code tokenizes denser.

@@ -2,7 +2,7 @@
 // Every change is written to storage first, so a failed write (quota,
 // private mode) throws before memory and the UI drift out of sync.
 
-import { parseStoredPrompts, touch } from "./prompt-model.js";
+import { parseStoredPrompts } from "./prompt-model.js";
 
 const STORAGE_KEY = "prompt-vault-prompts";
 
@@ -51,7 +51,7 @@ export function addPrompts(newPrompts) {
 }
 
 export function updatePrompt(id, change) {
-  commit([...prompts.values()].map((prompt) => (prompt.id === id ? touch(change(prompt)) : prompt)));
+  commit([...prompts.values()].map((prompt) => (prompt.id === id ? change(prompt) : prompt)));
 }
 
 export function deletePrompt(id) {
