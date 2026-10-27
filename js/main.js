@@ -1,5 +1,5 @@
 import * as store from "./store.js";
-import { createNote, createPrompt } from "./prompt-model.js";
+import { createNote, createPrompt, revisePrompt } from "./prompt-model.js";
 import { renderLibrary } from "./library-view.js";
 import { isSortOrder, queryLibrary } from "./library-query.js";
 import { renderCheckup } from "./checkup.js";
@@ -112,14 +112,19 @@ function findMissingFields({ title, model, content }) {
   ].filter(([value]) => !value);
 }
 
-/** Validates and stores the composer's fields; returns true when the prompt was saved. */
-function savePrompt(fields) {
+/** Reports and focuses the first missing field; returns true when all are present. */
+function hasRequiredFields(fields) {
   const missing = findMissingFields(fields);
-  if (missing.length > 0) {
-    showError(`Preencha ${formatList(missing.map(([, label]) => label))} para salvar.`);
-    document.querySelector(missing[0][2]).focus();
-    return false;
-  }
+  if (missing.length === 0) return true;
+  showError(`Preencha ${formatList(missing.map(([, label]) => label))} para salvar.`);
+  document.querySelector(missing[0][2]).focus();
+  return false;
+}
+
+/** Saves the composer's fields as a new prompt, or as an edit of `editingId`; returns true on success. */
+function savePrompt(fields, editingId) {
+  if (!hasRequiredFields(fields)) return false;
+  if (editingId) return saveEdit(editingId, fields);
 
   const prompt = createPrompt(fields);
   view.newPromptId = prompt.id;
@@ -133,6 +138,21 @@ function savePrompt(fields) {
   }
   if (saved) announce(`“${fields.title}” salvo na biblioteca`);
   return saved;
+}
+
+/** An edit keeps the active search, so the edited card may no longer match it. */
+function saveEdit(promptId, fields) {
+  const saved = attempt(
+    () => store.updatePrompt(promptId, (prompt) => revisePrompt(prompt, fields)),
+    "Não foi possível salvar as alterações.",
+  );
+  if (!saved) return false;
+
+  const visible = findInCard(promptId, '[data-action="copy"]') !== null;
+  announce(visible ? `“${fields.title}” atualizado` : `“${fields.title}” atualizado. Ele não aparece na busca atual.`);
+  // The composer returns focus to its toggle once this handler finishes; take it back afterwards.
+  queueMicrotask(() => (findInCard(promptId, '[data-action="copy"]') ?? searchInput).focus());
+  return true;
 }
 
 function updateCheckup() {
@@ -162,6 +182,10 @@ const cardActions = {
     setTimeout(() => (control.dataset.state = "idle"), COPY_RESET_DELAY);
   },
 
+  "edit-prompt"(promptId) {
+    composer.edit(store.getPrompt(promptId));
+  },
+
   // Deleting is two steps: the "Excluir prompt" button asks, and only the confirm button deletes.
   delete(promptId) {
     view.confirmingDeleteId = promptId;
@@ -182,6 +206,12 @@ const cardActions = {
 
     if (!attempt(() => store.deletePrompt(promptId), "Não foi possível excluir o prompt.")) return;
     announce(`“${title}” excluído`);
+    if (promptId === composer.editingId()) {
+      // Back to "Novo prompt" with its saved draft; reset() leaves the panel open, so close it
+      // unless the library is now empty (an empty library shows the composer open).
+      composer.reset();
+      if (store.listPrompts().length > 0) composer.close();
+    }
     // Focus would otherwise fall to <body>; move it to the next card or the heading.
     (neighbourId ? findInCard(neighbourId, '[data-action="open"]') : libraryTitle).focus();
   },
