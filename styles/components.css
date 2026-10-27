@@ -461,73 +461,44 @@
   scale: 0.98;
 }
 
-/* 30px glyph circle inside a 44px hit target */
-.icon-button {
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  place-items: center;
-  margin-inline: -0.25rem;
-  padding: 0;
+/* Copy is the card's primary action: a filled accent pill. */
+.copy-pill-small {
+  display: inline-flex;
+  min-height: 2.25rem;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+  padding-inline: 0.875rem;
   border: 0;
-  background: transparent;
-  color: var(--color-text-secondary);
-}
-
-.icon-button::before {
-  grid-area: 1 / 1;
-  width: 1.875rem;
-  height: 1.875rem;
-  border-radius: 50%;
-  background: var(--color-fill);
-  content: "";
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-subhead);
+  font-weight: 600;
   transition: background var(--duration-fast) var(--ease-out), scale var(--duration-fast) var(--ease-out);
 }
 
-.icon-button .icon {
-  grid-area: 1 / 1;
+.copy-pill-small .icon {
   width: 0.9375rem;
   height: 0.9375rem;
 }
 
-.icon-button:active::before {
-  scale: 0.9;
+.copy-pill-small:hover {
+  background: var(--color-accent-hover);
 }
 
-.icon-button:focus-visible {
-  outline: none;
+.copy-pill-small:active {
+  scale: 0.97;
 }
 
-.icon-button:focus-visible::before {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 1px;
-}
-
-.copy-button:hover,
-.copy-button[data-state="copied"] {
-  color: var(--color-accent);
-}
-
-.copy-button:hover::before {
-  background: var(--color-accent-soft);
-}
-
-.copy-button .icon-done,
-.copy-button[data-state="copied"] .icon-idle {
+.copy-pill-small .icon-done,
+.copy-pill-small[data-state="copied"] .icon-idle {
   display: none;
 }
 
-.copy-button[data-state="copied"] .icon-done {
+.copy-pill-small[data-state="copied"] .icon-done {
   display: block;
   animation: pop var(--duration-base) var(--ease-spring);
-}
-
-.delete-button:hover {
-  color: var(--color-danger);
-}
-
-.delete-button:hover::before {
-  background: var(--color-danger-soft);
 }
 
 .text-button {
@@ -655,16 +626,15 @@ label.text-button {
 
 .prompt-card {
   min-width: 0;
-  padding: 1.125rem 1.125rem var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-card);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--duration-base) var(--ease-out), translate var(--duration-base) var(--ease-out);
+  transition: box-shadow var(--duration-base) var(--ease-out);
 }
 
 .prompt-card:hover {
   box-shadow: var(--shadow-card-hover);
-  translate: 0 -2px;
 }
 
 .prompt-card.is-new {
@@ -679,43 +649,61 @@ label.text-button {
 }
 
 .card-title {
-  padding-block-start: 0.1875rem;
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  padding-block-start: 0.3125rem;
   font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-.card-actions {
-  display: flex;
-  flex: none;
-  margin: -0.625rem -0.625rem 0 0;
+.card-meta {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .prompt-preview {
   display: -webkit-box;
   overflow: hidden;
-  margin-block: 0.375rem var(--space-2);
+  margin-block: 0.125rem;
   color: var(--color-text-secondary);
   font-size: var(--text-subhead);
   line-height: 1.33;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
+.card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: var(--space-2);
+}
+
+/* An untinted text button: secondary to the copy pill. */
 .open-button {
   display: inline-flex;
-  min-height: 2.25rem;
+  min-height: 2rem;
   align-items: center;
   gap: 0.375rem;
-  margin: 0 0 var(--space-3) -0.625rem;
+  margin-inline-start: -0.625rem;
   padding-inline: 0.625rem;
   border: 0;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-accent);
+  color: var(--color-text-secondary);
   font-size: var(--text-subhead);
   font-weight: 600;
   transition: background var(--duration-fast) var(--ease-out);
@@ -728,63 +716,78 @@ label.text-button {
 }
 
 .open-button:hover {
-  background: var(--color-accent-soft);
+  background: var(--color-fill);
 }
 
 .open-button:hover .icon {
   translate: 2px -2px;
 }
 
-.metadata-section {
-  margin-block-end: 0.875rem;
-  padding: var(--space-3) 0.875rem;
-  border-radius: var(--radius-control);
-  background: var(--color-surface-sunken);
+.card-more {
+  min-width: 0;
+  margin-inline-start: auto;
 }
 
-.metadata-model {
+.card-more[open] {
+  flex: 1 0 100%;
+}
+
+.card-more > summary {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-inline-end: -0.625rem;
+  padding-inline: 0.625rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  cursor: pointer;
   font-size: var(--text-subhead);
   font-weight: 600;
-  overflow-wrap: anywhere;
+  list-style: none;
+  transition: background var(--duration-fast) var(--ease-out);
 }
 
-.metadata-timestamps {
-  margin-block-start: 0.125rem;
+.card-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-more > summary:hover {
+  background: var(--color-accent-soft);
+}
+
+.card-more[open] > summary {
+  justify-content: space-between;
+}
+
+.summary-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  transition: rotate var(--duration-base) var(--ease-out);
+}
+
+.card-more[open] > summary .summary-chevron {
+  rotate: 180deg;
+}
+
+.card-more[open] > summary + * {
+  margin-block-start: var(--space-2);
+}
+
+.card-dates {
+  margin-block-start: var(--space-3);
   color: var(--color-text-secondary);
   font-size: var(--text-footnote);
   font-variant-numeric: tabular-nums;
 }
 
-.token-estimate {
+.card-manage {
   display: flex;
-  align-items: center;
-  gap: 0.375rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
   margin-block-start: var(--space-2);
-  color: var(--color-text-secondary);
-  font-size: var(--text-caption);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Status color is always paired with the confidence label, never color alone. */
-.token-estimate::before {
-  width: 0.5rem;
-  height: 0.5rem;
-  flex: none;
-  border-radius: 50%;
-  background: currentColor;
-  content: "";
-}
-
-.confidence-high::before {
-  background: var(--color-success);
-}
-
-.confidence-medium::before {
-  background: var(--color-warning);
-}
-
-.confidence-low::before {
-  background: var(--color-danger);
 }
 
 /* ---------- Rating ---------- */
@@ -958,7 +961,9 @@ label.text-button {
 
   .text-button,
   .danger-button,
-  .open-button {
+  .open-button,
+  .copy-pill-small,
+  .card-more > summary {
     min-height: 2.75rem;
   }
 }

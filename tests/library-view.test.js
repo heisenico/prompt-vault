@@ -4,7 +4,7 @@ import { libraryItems, noResults } from "../js/library-view.js";
 import { createNote, createPrompt } from "../js/prompt-model.js";
 
 const make = (title) => createPrompt({ title, model: "gpt-4o", content: "conteúdo", isCode: false });
-const baseView = () => ({ editingNoteId: null, confirmingDeleteId: null, newPromptId: null, noteDrafts: new Map(), noteEditDraft: null });
+const baseView = () => ({ editingNoteId: null, confirmingDeleteId: null, newPromptId: null, noteDrafts: new Map(), noteEditDraft: null, expandedIds: new Set() });
 const sig = (prompts, view, index = 0) => libraryItems(prompts, view)[index].signature;
 
 test("drafts do not change the signature", () => {
@@ -86,6 +86,42 @@ test("both textareas start with a newline so a leading newline in a draft surviv
   const opens = markup.match(/<textarea[^>]*>[^]?/g);
   assert.equal(opens.length, 2);
   for (const open of opens) assert.ok(open.endsWith(">\n"), open);
+});
+
+const cardMarkup = (prompt, view = baseView()) => libraryItems([prompt], view)[0].render().markup;
+const openDetails = (markup) => /<details class="card-more"[^>]* open[ >]/.test(markup);
+
+test("expandedIds does not change the signature but opens details.card-more", () => {
+  const prompt = make("a");
+  const before = sig([prompt], baseView());
+  const view = { ...baseView(), expandedIds: new Set([prompt.id]) };
+  assert.equal(sig([prompt], view), before);
+  assert.ok(openDetails(cardMarkup(prompt, view)));
+  assert.ok(!openDetails(cardMarkup(prompt, baseView())));
+  assert.ok(!openDetails(cardMarkup(prompt, { ...baseView(), expandedIds: new Set(["outro"]) })));
+});
+
+test("details open while confirming delete or editing one of the card's notes", () => {
+  const prompt = withNote();
+  assert.ok(openDetails(cardMarkup(prompt, { ...baseView(), confirmingDeleteId: prompt.id })));
+  assert.ok(openDetails(cardMarkup(prompt, { ...baseView(), editingNoteId: prompt.notes[0].id })));
+  assert.ok(!openDetails(cardMarkup(prompt, { ...baseView(), confirmingDeleteId: "outro" })));
+});
+
+test("card has a primary Copiar pill with an accessible name and a more section", () => {
+  const markup = cardMarkup(make("Meu título"));
+  assert.match(markup, /<button class="copy-pill-small"[^>]*data-action="copy"[^>]*data-state="idle"[^>]*aria-label="Copiar Meu título"/);
+  assert.match(markup, />Copiar<\/span>/);
+  assert.match(markup, /<summary[^>]*>[^]*Avaliar e anotar/);
+  assert.ok(!markup.includes("delete-button"));
+  assert.ok(!markup.includes("metadata-section"));
+  assert.match(markup, /data-action="edit-prompt"/);
+  assert.match(markup, /Excluir prompt/);
+});
+
+test("summary shows the note count only when there are notes", () => {
+  assert.ok(!/Avaliar e anotar\s*·/.test(cardMarkup(make("a"))));
+  assert.match(cardMarkup(withNote()), /Avaliar e anotar · 1 nota/);
 });
 
 test("noResults names the query, escaped, and offers to clear the search", () => {

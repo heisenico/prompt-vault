@@ -53,6 +53,8 @@ const view = {
   noteDrafts: new Map(),
   /** Unsaved text of the note being edited, so re-rendering its card keeps the typing. */
   noteEditDraft: null,
+  /** Ids of cards whose "Avaliar e anotar" is open, kept in step by handleLibraryToggle. Never part of a card's signature. */
+  expandedIds: new Set(),
 };
 
 const composer = initComposer(form, {
@@ -325,6 +327,14 @@ function stopConfirmingDelete(promptId) {
   findInCard(promptId, '[data-action="delete"]').focus();
 }
 
+/** `toggle` doesn't bubble, so this is registered in the capture phase. No re-render: the DOM already matches. */
+function handleLibraryToggle(event) {
+  if (!event.target.matches("details.card-more")) return;
+  const promptId = event.target.closest("[data-prompt-id]").dataset.promptId;
+  if (event.target.open) view.expandedIds.add(promptId);
+  else view.expandedIds.delete(promptId);
+}
+
 function handleLibraryClick(event) {
   const control = event.target.closest("button[data-action]");
   if (!control) return;
@@ -447,6 +457,7 @@ async function importLibrary() {
 
 form.elements.content.addEventListener("input", updateCheckup);
 form.elements.isCode.addEventListener("change", updateCheckup);
+promptList.addEventListener("toggle", handleLibraryToggle, true);
 promptList.addEventListener("click", handleLibraryClick);
 promptList.addEventListener("input", handleLibraryInput);
 promptList.addEventListener("submit", handleLibrarySubmit);

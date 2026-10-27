@@ -45,30 +45,42 @@ export function libraryItems(prompts, view) {
   });
 }
 
-function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId, noteDrafts, noteEditDraft }) {
-  const { id, title, content } = prompt;
+function promptCard(prompt, view) {
+  const { editingNoteId, confirmingDeleteId, newPromptId, noteDrafts, noteEditDraft, expandedIds } = view;
+  const { id, title, content, rating, notes, metadata } = prompt;
   const titleId = `prompt-${id}-title`;
+  const range = formatTokenRange(metadata.tokenEstimate);
+  const confidence = CONFIDENCE_LABELS[metadata.tokenEstimate.confidence];
+  const confirming = id === confirmingDeleteId;
+  const editingNote = notes.some((note) => note.id === editingNoteId);
+  const open = expandedIds.has(id) || confirming || editingNote;
   return html`
       <article class="prompt-card ${id === newPromptId && "is-new"}" data-prompt-id="${id}" aria-labelledby="${titleId}">
         <header class="card-header">
           <h3 class="card-title" id="${titleId}">${title}</h3>
-          <div class="card-actions">
-            <button class="icon-button copy-button" type="button" data-action="copy" data-state="idle" aria-label="Copiar ${title}" title="Copiar prompt">
-              ${icon("copy", { className: "icon-idle" })}${icon("check", { strokeWidth: 2.5, className: "icon-done" })}
-            </button>
-            <button class="icon-button delete-button" type="button" data-action="delete" aria-label="Excluir ${title}" title="Excluir prompt">
-              ${icon("xmark", { strokeWidth: 2.5 })}
-            </button>
-          </div>
+          <button class="copy-pill-small" type="button" data-action="copy" data-state="idle" aria-label="Copiar ${title}">
+            ${icon("copy", { className: "icon-idle" })}${icon("check", { strokeWidth: 2.5, className: "icon-done" })}
+            <span class="copy-label">Copiar</span>
+          </button>
         </header>
-        ${id === confirmingDeleteId && deleteConfirmation(prompt)}
+        <p class="card-meta">${metadata.model}${rating && ` · ★ ${rating}`} · <span aria-hidden="true">≈ ${range} tokens</span><span class="visually-hidden">cerca de ${range.replace("–", " a ")} tokens, ${confidence}</span></p>
         <p class="prompt-preview">${previewOf(content)}</p>
-        <button class="open-button" type="button" data-action="open" aria-haspopup="dialog">
-          Ver completo<span class="visually-hidden">: ${title}</span>${icon("expand")}
-        </button>
-        ${metadataSection(prompt.metadata)}
-        ${ratingGroup(prompt)}
-        ${notesSection(prompt, editingNoteId, noteDrafts.get(id) ?? "", noteEditDraft)}
+        <div class="card-footer">
+          <button class="open-button" type="button" data-action="open" aria-haspopup="dialog">
+            Ver completo<span class="visually-hidden">: ${title}</span>${icon("expand")}
+          </button>
+          <details class="card-more" ${open && "open"}>
+            <summary>Avaliar e anotar${notes.length > 0 && ` · ${notes.length} ${notes.length === 1 ? "nota" : "notas"}`}${icon("chevron", { className: "summary-chevron" })}</summary>
+            ${ratingGroup(prompt)}
+            ${notesSection(prompt, editingNoteId, noteDrafts.get(id) ?? "", noteEditDraft)}
+            ${datesSection(metadata)}
+            <div class="card-manage">
+              <button class="text-button" type="button" data-action="edit-prompt">Editar prompt</button>
+              <button class="text-button is-danger" type="button" data-action="delete">Excluir prompt</button>
+            </div>
+            ${confirming && deleteConfirmation(prompt)}
+          </details>
+        </div>
       </article>`;
 }
 
@@ -84,21 +96,12 @@ function deleteConfirmation({ id, title }) {
     </div>`;
 }
 
-function metadataSection({ model, createdAt, updatedAt, tokenEstimate }) {
-  const range = formatTokenRange(tokenEstimate);
-  const confidence = CONFIDENCE_LABELS[tokenEstimate.confidence];
+function datesSection({ createdAt, updatedAt }) {
   return html`
-    <section class="metadata-section" aria-label="Detalhes do prompt">
-      <p class="metadata-model">Modelo: ${model}</p>
-      <div class="metadata-timestamps">
-        <p>Criado em <time datetime="${createdAt}">${formatDate(createdAt)}</time></p>
-        ${updatedAt !== createdAt && html`<p>Editado em <time datetime="${updatedAt}">${formatDate(updatedAt)}</time></p>`}
-      </div>
-      <p class="token-estimate confidence-${tokenEstimate.confidence}">
-        <span aria-hidden="true">≈ ${range} tokens · ${confidence}</span>
-        <span class="visually-hidden">Cerca de ${range.replace("–", " a ")} tokens, ${confidence}</span>
-      </p>
-    </section>`;
+    <div class="card-dates">
+      <p>Criado em <time datetime="${createdAt}">${formatDate(createdAt)}</time></p>
+      ${updatedAt !== createdAt && html`<p>Editado em <time datetime="${updatedAt}">${formatDate(updatedAt)}</time></p>`}
+    </div>`;
 }
 
 /** Radio semantics: one tab stop, arrow keys move (and save) the rating. */
