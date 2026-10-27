@@ -1,3 +1,5 @@
+import { promptToFields } from "./prompt-model.js";
+
 const DRAFT_KEY = "prompt-vault-draft";
 const DRAFT_DELAY = 300;
 
@@ -8,8 +10,9 @@ const SUBMIT_LABEL = { create: "Salvar prompt", edit: "Salvar alterações" };
  * The collapsible "new prompt" form. It owns opening, closing, edit mode and the
  * saved draft; the caller supplies what saving means through `onSubmit`.
  *
- * `onSubmit(fields, editingId)` returns true once the save succeeded, and the
- * composer then clears the form and closes. `onFill` (optional) runs after the
+ * `onSubmit(fields, editingId)` returns false on failure. On success it returns
+ * true or `{ focus }`; the composer then clears the form, closes, and focuses
+ * `focus` if given (else the toggle). `onFill` (optional) runs after the
  * composer fills or clears the fields itself, which fire no events.
  */
 export function initComposer(form, { panel, toggle, onSubmit, onFill = () => {} }) {
@@ -143,7 +146,7 @@ export function initComposer(form, { panel, toggle, onSubmit, onFill = () => {} 
     }
     editingId = prompt.id;
     setMode("edit");
-    fill(prompt);
+    fill(promptToFields(prompt));
     open();
     panel.scrollIntoView({ block: "nearest" });
   }
@@ -153,7 +156,8 @@ export function initComposer(form, { panel, toggle, onSubmit, onFill = () => {} 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const id = editingId;
-    if (!onSubmit(readFields(), id)) return;
+    const result = onSubmit(readFields(), id);
+    if (!result) return;
     editingId = null;
     setMode("create");
     if (id === null) {
@@ -164,7 +168,8 @@ export function initComposer(form, { panel, toggle, onSubmit, onFill = () => {} 
       fill({});
       restoreDraft();
     }
-    closeAndReturnFocus();
+    close();
+    (result.focus ?? toggle).focus();
   });
 
   form.addEventListener("input", scheduleDraft);

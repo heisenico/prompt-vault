@@ -121,12 +121,27 @@ function hasRequiredFields(fields) {
   return false;
 }
 
-/** Saves the composer's fields as a new prompt, or as an edit of `editingId`; returns true on success. */
+/** Builds a prompt, reporting validation errors (not as storage failures); returns null when invalid. */
+function build(make) {
+  try {
+    return make();
+  } catch (error) {
+    showError(error.message);
+    console.error("Prompt inválido:", error);
+    return null;
+  }
+}
+
+/**
+ * Saves the composer's fields as a new prompt, or as an edit of `editingId`.
+ * Returns false on failure, else `{ focus }` for the composer to focus (null = its toggle).
+ */
 function savePrompt(fields, editingId) {
   if (!hasRequiredFields(fields)) return false;
   if (editingId) return saveEdit(editingId, fields);
 
-  const prompt = createPrompt(fields);
+  const prompt = build(() => createPrompt(fields));
+  if (!prompt) return false;
   view.newPromptId = prompt.id;
   // The store notifies synchronously, so clear the search first or the new prompt could be filtered out.
   const previousQuery = view.query;
@@ -136,23 +151,24 @@ function savePrompt(fields, editingId) {
     view.query = previousQuery;
     searchInput.value = previousQuery;
   }
-  if (saved) announce(`“${fields.title}” salvo na biblioteca`);
-  return saved;
+  if (!saved) return false;
+  announce(`“${fields.title}” salvo na biblioteca`);
+  return { focus: null };
 }
 
 /** An edit keeps the active search, so the edited card may no longer match it. */
 function saveEdit(promptId, fields) {
+  const revised = build(() => revisePrompt(store.getPrompt(promptId), fields));
+  if (!revised) return false;
   const saved = attempt(
-    () => store.updatePrompt(promptId, (prompt) => revisePrompt(prompt, fields)),
+    () => store.updatePrompt(promptId, () => revised),
     "Não foi possível salvar as alterações.",
   );
   if (!saved) return false;
 
-  const visible = findInCard(promptId, '[data-action="copy"]') !== null;
-  announce(visible ? `“${fields.title}” atualizado` : `“${fields.title}” atualizado. Ele não aparece na busca atual.`);
-  // The composer returns focus to its toggle once this handler finishes; take it back afterwards.
-  queueMicrotask(() => (findInCard(promptId, '[data-action="copy"]') ?? searchInput).focus());
-  return true;
+  const card = findInCard(promptId, '[data-action="copy"]');
+  announce(card ? `“${fields.title}” atualizado` : `“${fields.title}” atualizado. Ele não aparece na busca atual.`);
+  return { focus: card ?? searchInput };
 }
 
 function updateCheckup() {

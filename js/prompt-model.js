@@ -35,6 +35,13 @@ export function touch(prompt) {
   return { ...prompt, metadata: { ...prompt.metadata, updatedAt: new Date().toISOString() } };
 }
 
+/** The editable fields of a stored prompt, in the flat shape the composer form uses. */
+export function promptToFields(prompt) {
+  const model = prompt?.metadata?.model;
+  if (typeof model !== "string") throw new TypeError("O prompt não tem um modelo em metadata.model.");
+  return { title: prompt.title, model, content: prompt.content, isCode: prompt.isCode };
+}
+
 /** Applies an edit to a prompt's text and model. Rating and notes are kept as they are. */
 export function revisePrompt(prompt, { title, model, content, isCode }) {
   assertModelName(model);

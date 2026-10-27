@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { revisePrompt } from "../js/prompt-model.js";
+import { promptToFields, revisePrompt } from "../js/prompt-model.js";
 import { promptFixture } from "./fixtures.js";
 
 test("revisePrompt updates fields, estimate and updatedAt, keeps identity", () => {
@@ -18,4 +18,17 @@ test("revisePrompt updates fields, estimate and updatedAt, keeps identity", () =
 
 test("revisePrompt rejects a blank model", () => {
   assert.throws(() => revisePrompt(promptFixture(), { title: "t", model: "  ", content: "c", isCode: false }), /modelo/);
+});
+
+test("promptToFields flattens a stored prompt into the form's fields", () => {
+  assert.deepEqual(promptToFields(promptFixture({ title: "T", isCode: true })), {
+    title: "T",
+    model: "Claude Sonnet 5.5",
+    content: "Você é um revisor.",
+    isCode: true,
+  });
+});
+
+test("promptToFields rejects a prompt without metadata.model", () => {
+  assert.throws(() => promptToFields({ metadata: {} }), TypeError);
 });
