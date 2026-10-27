@@ -21,6 +21,7 @@ Then open <http://localhost:8000>. Copy-to-clipboard needs a secure context (`lo
   - **← / →** (or the arrow buttons) move to the previous or next prompt.
   - **Esc**, the close button, or a click outside the panel closes it, and focus returns to the card.
 - **Model:** the Modelo field suggests recent models as you type (↓ opens the list, Enter picks). Any other name still saves. The list is a bundled snapshot; refresh it with `node scripts/update-models.mjs`. The app itself never fetches it from the network.
+- **Export / Import:** **Exportar biblioteca** in the footer downloads every prompt as a JSON file. **Importar…** reads such a file (or a bare array of prompts) and adds the prompts whose ids aren't in the library yet; the result appears next to the buttons.
 - **Try it:** with an empty library, **Carregar exemplos** loads three sample prompts.
 
 ## Test
@@ -46,6 +47,11 @@ js/main.js              Wires the UI: form and card actions
 js/store.js             Prompt library in a Map, kept in sync with localStorage
 js/prompt-model.js      Creating, estimating, validating and upgrading prompts
 js/library-view.js      Card and empty-state markup
+js/keyed-list.js        Pure planner: which cards to keep, replace, create or drop
+js/keyed-render.js      Applies that plan to the DOM so unchanged cards are never recreated
+js/text-search.js       Accent- and case-insensitive term matching
+js/library-query.js     Filtering and sorting the library
+js/library-transfer.js  Export and import of the library as JSON
 js/prompt-viewer.js     Full-view dialog behavior
 js/model-combobox.js    Model field suggestions (ARIA combobox)
 js/checkup.js           Live prompt checkup
@@ -54,6 +60,8 @@ js/icons.js, format.js, clipboard.js, feedback.js   Small helpers
 data/sample-prompts.json  Sample prompts
 data/models.json        Bundled model list for the combobox
 scripts/update-models.mjs  Refreshes data/models.json from OpenRouter
+tests/                  node:test unit tests for the pure modules and card signatures
+package.json            Defines `npm test`; no dependencies
 ```
 
 ## Browser support
