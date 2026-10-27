@@ -526,6 +526,33 @@
   background: var(--color-fill);
 }
 
+/* Label-wrapped file input: show the ring on the label, since the input itself is hidden. */
+.text-button:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.text-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.text-button:disabled:hover {
+  background: transparent;
+}
+
+.footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+label.text-button {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 .text-button.is-tinted {
   justify-self: start;
   padding-inline: 0.875rem;

@@ -7,6 +7,7 @@ import { initModelCombobox } from "./model-combobox.js";
 import { copyText } from "./clipboard.js";
 import { announce, clearError, showError, STORAGE_HINT } from "./feedback.js";
 import { formatList } from "./format.js";
+import { exportFileName, parseLibraryFile, partitionImport, serializeLibrary } from "./library-transfer.js";
 
 const SAMPLE_PROMPTS_URL = new URL("../data/sample-prompts.json", import.meta.url);
 const COPY_RESET_DELAY = 1600;
@@ -16,6 +17,8 @@ const checkup = document.querySelector("#prompt-checkup");
 const promptList = document.querySelector("#prompt-list");
 const promptCount = document.querySelector("#prompt-count");
 const libraryTitle = document.querySelector("#library-title");
+const exportButton = document.querySelector('[data-transfer="export"]');
+const importInput = document.querySelector('[data-transfer="import"]');
 
 /** UI state that isn't part of the stored library. */
 const view = {
@@ -37,6 +40,7 @@ function renderApp() {
   const prompts = store.listPrompts();
   renderLibrary(promptList, prompts, view);
   promptCount.textContent = prompts.length;
+  exportButton.disabled = prompts.length === 0;
   view.newPromptId = null;
 }
 
@@ -296,6 +300,36 @@ function handleLibrarySubmit(event) {
   formActions[noteForm.dataset.action](promptId, noteForm);
 }
 
+// ---------- Export and import ----------
+
+function exportLibrary() {
+  const json = serializeLibrary(store.listPrompts(), new Date().toISOString());
+  const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = exportFileName(new Date());
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  announce("Biblioteca exportada");
+}
+
+async function importLibrary() {
+  const [file] = importInput.files;
+  if (!file) return;
+  try {
+    const incoming = parseLibraryFile(await file.text());
+    const { fresh, duplicates } = partitionImport(store.listPrompts(), incoming);
+    if (!attempt(() => store.addPrompts(fresh), "Não foi possível importar.")) return;
+    announce(`${fresh.length} importados, ${duplicates} já existiam`);
+  } catch (error) {
+    showError(error.message);
+    console.error("Falha ao importar biblioteca:", error);
+  } finally {
+    // Clearing the value lets the same file be chosen again.
+    importInput.value = "";
+  }
+}
+
 // ---------- Start ----------
 
 form.addEventListener("submit", savePrompt);
@@ -305,6 +339,8 @@ promptList.addEventListener("click", handleLibraryClick);
 promptList.addEventListener("input", handleLibraryInput);
 promptList.addEventListener("submit", handleLibrarySubmit);
 promptList.addEventListener("keydown", handleLibraryKeydown);
+exportButton.addEventListener("click", exportLibrary);
+importInput.addEventListener("change", importLibrary);
 store.subscribe(renderApp);
 
 // Without the suggestion list the model field still works as plain text.

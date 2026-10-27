@@ -96,8 +96,11 @@
     </main>
 
     <footer class="site-footer page-width">
-      <span>Feito para quem pensa em prompts.</span>
       <span>Nada sai do seu navegador.</span>
+      <div class="footer-actions">
+        <button class="text-button" type="button" data-transfer="export">Exportar biblioteca</button>
+        <label class="text-button">Importar…<input class="visually-hidden" type="file" accept=".json,application/json" data-transfer="import"></label>
+      </div>
     </footer>
 
     <dialog id="prompt-viewer" class="prompt-viewer" aria-labelledby="viewer-title">
