@@ -3,22 +3,48 @@
 
 import { html, render } from "./html.js";
 import { icon } from "./icons.js";
+import { renderKeyedList } from "./keyed-render.js";
 import { CONFIDENCE_LABELS, formatDate, formatTokenRange, previewOf } from "./format.js";
 
 const RATING_VALUES = [1, 2, 3, 4, 5];
 
-export function renderLibrary(container, prompts, cardState) {
-  const view = prompts.length
-    ? html`<ul class="prompt-grid" role="list">${prompts.map((prompt) => promptCard(prompt, cardState))}</ul>`
-    : emptyState();
-  render(container, view);
+/**
+ * One persistent <ul> is updated in place (see keyed-render.js) so cards that
+ * didn't change keep their DOM, focus and unsaved note drafts. It is swapped
+ * with the empty state only when the library goes empty <-> non-empty.
+ */
+export function renderLibrary(container, prompts, view) {
+  if (prompts.length === 0) {
+    render(container, emptyState());
+    return;
+  }
+  let list = container.querySelector(":scope > ul.prompt-grid");
+  if (!list) {
+    render(container, html`<ul class="prompt-grid" role="list"></ul>`);
+    list = container.firstElementChild;
+  }
+  renderKeyedList(list, libraryItems(prompts, view));
 }
 
-function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId }) {
+/** What re-renders a card: stored data and card UI state. Drafts and the expanded state are left out on purpose. */
+export function libraryItems(prompts, view) {
+  return prompts.map((prompt) => {
+    const { id } = prompt;
+    const editingNoteId = prompt.notes.some((note) => note.id === view.editingNoteId) ? view.editingNoteId : null;
+    const confirmingDelete = view.confirmingDeleteId === id;
+    const cardError = view.cardError?.promptId === id ? view.cardError.message : null;
+    return {
+      key: id,
+      signature: JSON.stringify([prompt, editingNoteId, confirmingDelete, cardError]),
+      view: promptCard(prompt, view),
+    };
+  });
+}
+
+function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId, noteDrafts }) {
   const { id, title, content } = prompt;
   const titleId = `prompt-${id}-title`;
   return html`
-    <li>
       <article class="prompt-card ${id === newPromptId && "is-new"}" data-prompt-id="${id}" aria-labelledby="${titleId}">
         <header class="card-header">
           <h3 class="card-title" id="${titleId}">${title}</h3>
@@ -38,9 +64,8 @@ function promptCard(prompt, { editingNoteId, confirmingDeleteId, newPromptId }) 
         </button>
         ${metadataSection(prompt.metadata)}
         ${ratingGroup(prompt)}
-        ${notesSection(prompt, editingNoteId)}
-      </article>
-    </li>`;
+        ${notesSection(prompt, editingNoteId, noteDrafts.get(id) ?? "")}
+      </article>`;
 }
 
 function deleteConfirmation({ id, title }) {
@@ -89,7 +114,7 @@ function ratingGroup({ title, rating }) {
     </div>`;
 }
 
-function notesSection({ id, notes }, editingNoteId) {
+function notesSection({ id, notes }, editingNoteId, draft) {
   const headingId = `prompt-${id}-notes`;
   const inputId = `prompt-${id}-new-note`;
   return html`
@@ -101,7 +126,7 @@ function notesSection({ id, notes }, editingNoteId) {
         </ul>`}
       <form class="note-form" data-action="add-note">
         <label class="note-input-label" for="${inputId}">Nova nota</label>
-        <textarea class="note-input" id="${inputId}" name="note" rows="2" placeholder="O que funcionou? O que ajustar?"></textarea>
+        <textarea class="note-input" id="${inputId}" name="note" rows="2" placeholder="O que funcionou? O que ajustar?">${draft}</textarea>
         <button class="text-button is-tinted" type="submit">Adicionar nota</button>
       </form>
     </section>`;

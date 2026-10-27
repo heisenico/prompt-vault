@@ -22,6 +22,8 @@ const view = {
   editingNoteId: null,
   confirmingDeleteId: null,
   newPromptId: null,
+  /** Unsent "Nova nota" text per prompt id, so re-renders never lose typing. */
+  noteDrafts: new Map(),
 };
 
 const viewer = initPromptViewer(document.querySelector("#prompt-viewer"), {
@@ -201,6 +203,7 @@ const formActions = {
       "Não foi possível salvar a nota.",
     );
     if (added) {
+      view.noteDrafts.delete(promptId);
       announce("Nota adicionada");
       findInCard(promptId, ".note-form textarea").focus();
     }
@@ -276,6 +279,13 @@ function handleLibraryClick(event) {
   cardActions[control.dataset.action](promptId, control);
 }
 
+function handleLibraryInput(event) {
+  if (!event.target.matches(".note-form textarea")) return;
+  const promptId = event.target.closest("[data-prompt-id]").dataset.promptId;
+  if (event.target.value) view.noteDrafts.set(promptId, event.target.value);
+  else view.noteDrafts.delete(promptId);
+}
+
 function handleLibrarySubmit(event) {
   event.preventDefault();
   const noteForm = event.target;
@@ -289,6 +299,7 @@ form.addEventListener("submit", savePrompt);
 form.elements.content.addEventListener("input", updateCheckup);
 form.elements.isCode.addEventListener("change", updateCheckup);
 promptList.addEventListener("click", handleLibraryClick);
+promptList.addEventListener("input", handleLibraryInput);
 promptList.addEventListener("submit", handleLibrarySubmit);
 promptList.addEventListener("keydown", handleLibraryKeydown);
 store.subscribe(renderApp);
