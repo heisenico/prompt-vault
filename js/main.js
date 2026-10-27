@@ -162,7 +162,7 @@ const cardActions = {
     setTimeout(() => (control.dataset.state = "idle"), COPY_RESET_DELAY);
   },
 
-  // Deleting is two steps: the × button asks, and only the confirm button deletes.
+  // Deleting is two steps: the "Excluir prompt" button asks, and only the confirm button deletes.
   delete(promptId) {
     view.confirmingDeleteId = promptId;
     renderApp();
@@ -176,7 +176,8 @@ const cardActions = {
   "confirm-delete"(promptId) {
     const { title } = store.getPrompt(promptId);
     view.confirmingDeleteId = null;
-    const ids = store.listPrompts().map(({ id }) => id);
+    view.expandedIds.delete(promptId);
+    const ids =store.listPrompts().map(({ id }) => id);
     const neighbourId = ids[ids.indexOf(promptId) + 1] ?? ids[ids.indexOf(promptId) - 1];
 
     if (!attempt(() => store.deletePrompt(promptId), "Não foi possível excluir o prompt.")) return;
@@ -331,8 +332,21 @@ function stopConfirmingDelete(promptId) {
 function handleLibraryToggle(event) {
   if (!event.target.matches("details.card-more")) return;
   const promptId = event.target.closest("[data-prompt-id]").dataset.promptId;
-  if (event.target.open) view.expandedIds.add(promptId);
-  else view.expandedIds.delete(promptId);
+  if (event.target.open) {
+    view.expandedIds.add(promptId);
+    return;
+  }
+  view.expandedIds.delete(promptId);
+  // Closing hides a pending delete confirmation or note edit; drop that state so it can't
+  // be orphaned behind a closed <details> (and force it open on a later render).
+  const editingHere = store.getPrompt(promptId)?.notes.some((note) => note.id === view.editingNoteId);
+  if (view.confirmingDeleteId !== promptId && !editingHere) return;
+  if (view.confirmingDeleteId === promptId) view.confirmingDeleteId = null;
+  if (editingHere) {
+    view.editingNoteId = null;
+    view.noteEditDraft = null;
+  }
+  renderApp();
 }
 
 function handleLibraryClick(event) {

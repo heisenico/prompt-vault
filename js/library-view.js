@@ -63,20 +63,20 @@ function promptCard(prompt, view) {
             <span class="copy-label">Copiar</span>
           </button>
         </header>
-        <p class="card-meta">${metadata.model}${rating && ` · ★ ${rating}`} · <span aria-hidden="true">≈ ${range} tokens</span><span class="visually-hidden">cerca de ${range.replace("–", " a ")} tokens, ${confidence}</span></p>
+        <p class="card-meta">${metadata.model}${rating && html`<span aria-hidden="true"> · </span><span aria-hidden="true">★ ${rating}</span><span class="visually-hidden">, ${rating} de 5 estrelas</span>`}<span aria-hidden="true"> · </span><span aria-hidden="true">≈ ${range} tokens</span><span class="visually-hidden">, cerca de ${range.replace("–", " a ")} tokens, ${confidence}</span></p>
         <p class="prompt-preview">${previewOf(content)}</p>
         <div class="card-footer">
           <button class="open-button" type="button" data-action="open" aria-haspopup="dialog">
             Ver completo<span class="visually-hidden">: ${title}</span>${icon("expand")}
           </button>
           <details class="card-more" ${open && "open"}>
-            <summary>Avaliar e anotar${notes.length > 0 && ` · ${notes.length} ${notes.length === 1 ? "nota" : "notas"}`}${icon("chevron", { className: "summary-chevron" })}</summary>
+            <summary>Avaliar e anotar${notes.length > 0 && ` · ${notes.length} ${notes.length === 1 ? "nota" : "notas"}`}<span class="visually-hidden">: ${title}</span>${icon("chevron", { className: "summary-chevron" })}</summary>
             ${ratingGroup(prompt)}
             ${notesSection(prompt, editingNoteId, noteDrafts.get(id) ?? "", noteEditDraft)}
             ${datesSection(metadata)}
             <div class="card-manage">
-              <button class="text-button" type="button" data-action="edit-prompt">Editar prompt</button>
-              <button class="text-button is-danger" type="button" data-action="delete">Excluir prompt</button>
+              <button class="text-button" type="button" data-action="edit-prompt">Editar prompt<span class="visually-hidden">: ${title}</span></button>
+              <button class="text-button is-danger" type="button" data-action="delete">Excluir prompt<span class="visually-hidden">: ${title}</span></button>
             </div>
             ${confirming && deleteConfirmation(prompt)}
           </details>

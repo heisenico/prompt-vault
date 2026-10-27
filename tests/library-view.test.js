@@ -124,6 +124,25 @@ test("summary shows the note count only when there are notes", () => {
   assert.match(cardMarkup(withNote()), /Avaliar e anotar · 1 nota/);
 });
 
+test("summary and manage buttons carry the prompt title in a visually-hidden suffix", () => {
+  const markup = cardMarkup(make("Meu <título>"));
+  const suffix = '<span class="visually-hidden">: Meu &lt;título&gt;</span>';
+  assert.ok(markup.includes(`Avaliar e anotar${suffix}`));
+  assert.ok(markup.includes(`data-action="edit-prompt">Editar prompt${suffix}</button>`));
+  assert.ok(markup.includes(`data-action="delete">Excluir prompt${suffix}</button>`));
+});
+
+test("meta line hides separators and visual stars from speech and spells out the spoken text", () => {
+  const prompt = { ...make("a"), rating: 4 };
+  const meta = cardMarkup(prompt).match(/<p class="card-meta">[^]*?<\/p>/)[0];
+  assert.ok(meta.includes('<span aria-hidden="true">★ 4</span><span class="visually-hidden">, 4 de 5 estrelas</span>'));
+  assert.equal(meta.match(/<span aria-hidden="true"> · <\/span>/g).length, 2);
+  assert.match(meta, /<span class="visually-hidden">, cerca de \d+ a \d+ tokens, [^<]+<\/span>/);
+  const unrated = cardMarkup(make("a")).match(/<p class="card-meta">[^]*?<\/p>/)[0];
+  assert.ok(!unrated.includes("estrelas"));
+  assert.equal(unrated.match(/ · /g).length, 1);
+});
+
 test("noResults names the query, escaped, and offers to clear the search", () => {
   const { markup } = noResults('<img src=x onerror="a">');
   assert.match(markup, /Nada encontrado para “&lt;img src=x onerror=&quot;a&quot;&gt;”\./);
