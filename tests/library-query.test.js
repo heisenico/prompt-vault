@@ -38,6 +38,11 @@ test("does not mutate its input", () => {
   assert.deepEqual(ids(input), ["a", "b", "c"]);
 });
 
+test("unknown sort order throws instead of falling back", () => {
+  assert.throws(() => queryLibrary([a], { query: "", sort: "random" }), RangeError);
+  assert.throws(() => queryLibrary([a], { query: "", sort: "random" }), /Ordem desconhecida/);
+});
+
 test("isSortOrder guards stored values", () => {
   assert.equal(isSortOrder("rating"), true);
   assert.equal(isSortOrder("random"), false);

@@ -32,5 +32,6 @@ function searchableText(prompt) {
 
 /** Prompts matching `query` (accent-insensitive, all terms), sorted by `sort`. Returns a new array. */
 export function queryLibrary(prompts, { query, sort }) {
+  if (!isSortOrder(sort)) throw new RangeError(`Ordem desconhecida: ${sort}`);
   return prompts.filter((prompt) => matchesAllTerms(searchableText(prompt), query)).sort(COMPARATORS[sort]);
 }
