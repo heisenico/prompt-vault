@@ -544,7 +544,14 @@
 .footer-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-1);
+}
+
+.footer-status {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-footnote);
 }
 
 label.text-button {

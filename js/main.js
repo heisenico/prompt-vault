@@ -7,7 +7,7 @@ import { initModelCombobox } from "./model-combobox.js";
 import { copyText } from "./clipboard.js";
 import { announce, clearError, showError, STORAGE_HINT } from "./feedback.js";
 import { formatList } from "./format.js";
-import { exportFileName, parseLibraryFile, partitionImport, serializeLibrary } from "./library-transfer.js";
+import { exportFileName, importSummary, parseLibraryFile, partitionImport, serializeLibrary } from "./library-transfer.js";
 
 const SAMPLE_PROMPTS_URL = new URL("../data/sample-prompts.json", import.meta.url);
 const COPY_RESET_DELAY = 1600;
@@ -19,6 +19,7 @@ const promptCount = document.querySelector("#prompt-count");
 const libraryTitle = document.querySelector("#library-title");
 const exportButton = document.querySelector('[data-transfer="export"]');
 const importInput = document.querySelector('[data-transfer="import"]');
+const transferStatus = document.querySelector('[data-transfer="status"]');
 
 /** UI state that isn't part of the stored library. */
 const view = {
@@ -27,6 +28,8 @@ const view = {
   newPromptId: null,
   /** Unsent "Nova nota" text per prompt id, so re-renders never lose typing. */
   noteDrafts: new Map(),
+  /** Unsaved text of the note being edited, so re-rendering its card keeps the typing. */
+  noteEditDraft: null,
 };
 
 const viewer = initPromptViewer(document.querySelector("#prompt-viewer"), {
@@ -158,7 +161,9 @@ const cardActions = {
   },
 
   "edit-note"(promptId, control) {
-    view.editingNoteId = control.closest("[data-note-id]").dataset.noteId;
+    const { noteId } = control.closest("[data-note-id]").dataset;
+    if (view.noteEditDraft?.noteId !== noteId) view.noteEditDraft = null;
+    view.editingNoteId = noteId;
     renderApp();
     findInCard(promptId, ".note-edit-form textarea").focus();
   },
@@ -224,7 +229,10 @@ const formActions = {
       return;
     }
     const { noteId } = noteForm.closest("[data-note-id]").dataset;
+    // The store notifies synchronously, so leave edit mode before writing; restore it if the write fails.
+    const draft = view.noteEditDraft;
     view.editingNoteId = null;
+    view.noteEditDraft = null;
     const saved = attempt(
       () => store.updatePrompt(promptId, (prompt) => ({
         ...prompt,
@@ -232,7 +240,12 @@ const formActions = {
       })),
       "Não foi possível salvar a edição.",
     );
-    if (saved) findInCard(promptId, `[data-note-id="${CSS.escape(noteId)}"] [data-action="edit-note"]`).focus();
+    if (saved) {
+      findInCard(promptId, `[data-note-id="${CSS.escape(noteId)}"] [data-action="edit-note"]`).focus();
+    } else {
+      view.editingNoteId = noteId;
+      view.noteEditDraft = draft;
+    }
   },
 };
 
@@ -247,6 +260,7 @@ function setRating(promptId, rating) {
 function stopEditingNote(promptId) {
   const noteId = view.editingNoteId;
   view.editingNoteId = null;
+  view.noteEditDraft = null;
   renderApp();
   findInCard(promptId, `[data-note-id="${CSS.escape(noteId)}"] [data-action="edit-note"]`).focus();
 }
@@ -287,10 +301,14 @@ function handleLibraryClick(event) {
 }
 
 function handleLibraryInput(event) {
-  if (!event.target.matches(".note-form textarea")) return;
-  const promptId = event.target.closest("[data-prompt-id]").dataset.promptId;
-  if (event.target.value) view.noteDrafts.set(promptId, event.target.value);
-  else view.noteDrafts.delete(promptId);
+  const { target } = event;
+  if (target.matches(".note-edit-form textarea")) {
+    view.noteEditDraft = { noteId: target.closest("[data-note-id]").dataset.noteId, text: target.value };
+  } else if (target.matches(".note-form textarea")) {
+    const promptId = target.closest("[data-prompt-id]").dataset.promptId;
+    if (target.value) view.noteDrafts.set(promptId, target.value);
+    else view.noteDrafts.delete(promptId);
+  }
 }
 
 function handleLibrarySubmit(event) {
@@ -303,11 +321,12 @@ function handleLibrarySubmit(event) {
 // ---------- Export and import ----------
 
 function exportLibrary() {
-  const json = serializeLibrary(store.listPrompts(), new Date().toISOString());
+  const now = new Date();
+  const json = serializeLibrary(store.listPrompts(), now.toISOString());
   const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
   const link = document.createElement("a");
   link.href = url;
-  link.download = exportFileName(new Date());
+  link.download = exportFileName(now);
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
   announce("Biblioteca exportada");
@@ -316,13 +335,19 @@ function exportLibrary() {
 async function importLibrary() {
   const [file] = importInput.files;
   if (!file) return;
+  transferStatus.textContent = "";
   try {
     const incoming = parseLibraryFile(await file.text());
     const { fresh, duplicates } = partitionImport(store.listPrompts(), incoming);
-    if (fresh.length > 0 && !attempt(() => store.addPrompts(fresh), "Não foi possível importar.")) return;
-    announce(`${fresh.length} importados, ${duplicates} já existiam`);
+    if (fresh.length > 0 && !attempt(() => store.addPrompts(fresh), "Não foi possível importar.")) {
+      // attempt() already reported to the library column and the console; repeat it where the user is looking.
+      transferStatus.textContent = `Não foi possível importar. ${STORAGE_HINT}`;
+      return;
+    }
+    // The footer status is a role="status" region, so this is announced as well as shown.
+    transferStatus.textContent = importSummary(fresh.length, duplicates);
   } catch (error) {
-    showError(error.message);
+    transferStatus.textContent = error.message;
     console.error("Falha ao importar biblioteca:", error);
   } finally {
     // Clearing the value lets the same file be chosen again.
