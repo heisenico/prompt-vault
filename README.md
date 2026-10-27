@@ -23,6 +23,14 @@ Then open <http://localhost:8000>. Copy-to-clipboard needs a secure context (`lo
 - **Model:** the Modelo field suggests recent models as you type (↓ opens the list, Enter picks). Any other name still saves. The list is a bundled snapshot; refresh it with `node scripts/update-models.mjs`. The app itself never fetches it from the network.
 - **Try it:** with an empty library, **Carregar exemplos** loads three sample prompts.
 
+## Test
+
+```sh
+npm test
+```
+
+Runs the unit tests in `tests/` with Node's built-in test runner. The pure modules in `js/` have no DOM access, so they run under Node without a browser.
+
 ## Project structure
 
 ```

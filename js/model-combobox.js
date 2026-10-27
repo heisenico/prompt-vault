@@ -5,6 +5,7 @@
 import { html, render } from "./html.js";
 import { icon } from "./icons.js";
 import { announce } from "./feedback.js";
+import { matchesAllTerms } from "./text-search.js";
 
 const MODELS_URL = new URL("../data/models.json", import.meta.url);
 const ANNOUNCE_DELAY = 500;
@@ -12,14 +13,6 @@ const VIEWPORT_MARGIN = 16;
 const MIN_LIST_HEIGHT = 160;
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "UTC" });
-
-/** Case- and accent-insensitive: "Gêmini" finds "Gemini". */
-const normalize = (text) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-
-function matchesQuery(provider, model, query) {
-  const haystack = normalize(`${provider} ${model}`);
-  return normalize(query).split(/\s+/).every((term) => haystack.includes(term));
-}
 
 export async function initModelCombobox(input) {
   const response = await fetch(MODELS_URL);
@@ -65,7 +58,7 @@ export async function initModelCombobox(input) {
   function renderOptions(query) {
     let index = 0;
     const groups = providers
-      .map(({ name, models }) => ({ name, models: models.filter((model) => matchesQuery(name, model, query)) }))
+      .map(({ name, models }) => ({ name, models: models.filter((model) => matchesAllTerms(`${name} ${model}`, query)) }))
       .filter(({ models }) => models.length > 0);
 
     render(listbox, html`${groups.map(({ name, models }, groupIndex) => html`
