@@ -22,7 +22,20 @@ export function parseLibraryFile(text) {
   if (!Array.isArray(list)) {
     throw new Error("Arquivo não reconhecido: não é uma biblioteca do Prompt Vault.");
   }
-  return parseStoredPrompts(JSON.stringify(list)).prompts;
+  try {
+    return parseStoredPrompts(JSON.stringify(list)).prompts;
+  } catch (error) {
+    // parseStoredPrompts words its errors for localStorage ("salvo"); an import file isn't that.
+    const reason = error.message.replace(/^Prompt salvo inválido: /, "");
+    throw new Error(`Arquivo não reconhecido: ${reason}`, { cause: error });
+  }
+}
+
+/** "1 importado, 2 já existiam" */
+export function importSummary(added, duplicates) {
+  const imported = added === 1 ? "importado" : "importados";
+  const existed = duplicates === 1 ? "já existia" : "já existiam";
+  return `${added} ${imported}, ${duplicates} ${existed}`;
 }
 
 /** Splits incoming prompts into new ones and duplicates: ids already in the library or repeated within the file. */

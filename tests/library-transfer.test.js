@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { serializeLibrary, parseLibraryFile, partitionImport, exportFileName } from "../js/library-transfer.js";
+import { serializeLibrary, parseLibraryFile, partitionImport, exportFileName, importSummary } from "../js/library-transfer.js";
 import { promptFixture } from "./fixtures.js";
 
 test("export then import round-trips", () => {
@@ -29,8 +29,17 @@ test("invalid JSON keeps the parse error as cause", () => {
   assert.throws(() => parseLibraryFile("not json"), (error) => error.cause instanceof SyntaxError);
 });
 
-test("validation errors from the model propagate unchanged", () => {
-  assert.throws(() => parseLibraryFile('[{"id":1}]'), /Prompt salvo inválido/);
+test("validation errors are reworded for imports and keep the original as cause", () => {
+  assert.throws(
+    () => parseLibraryFile('[{"id":1}]'),
+    (error) => /^Arquivo não reconhecido: /.test(error.message) && !/salvo/.test(error.message) && error.cause instanceof Error,
+  );
+});
+
+test("importSummary pluralises in pt-BR", () => {
+  assert.equal(importSummary(0, 3), "0 importados, 3 já existiam");
+  assert.equal(importSummary(1, 2), "1 importado, 2 já existiam");
+  assert.equal(importSummary(2, 1), "2 importados, 1 já existia");
 });
 
 test("importing the same prompts twice adds nothing", () => {

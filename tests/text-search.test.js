@@ -20,3 +20,9 @@ test("regex characters match literally", () => {
   assert.equal(matchesAllTerms("abc", "a.c"), false);
   assert.doesNotThrow(() => matchesAllTerms("x", "(["));
 });
+
+test("combining marks are stripped but ASCII symbols are kept", () => {
+  assert.equal(matchesAllTerms("abc", "^"), false);
+  assert.equal(matchesAllTerms("use `x` aqui", "`x`"), true);
+  assert.equal(matchesAllTerms("Gêmini Pro", "gemini"), true);
+});
